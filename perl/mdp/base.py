@@ -33,8 +33,20 @@ def bellman(mdp, state, action, values):
             for prob, (new_state, reward) in mdp.transitions(state, action))
 
 
-def value_iteration(mdp, epsilon=1e-5):
-    values = {state: 0 for state in find_all_states(mdp)}
+def value_iteration(mdp, epsilon=1e-5, values=None):
+    """ Solve MDP using value iteration
+
+    Args:
+        mdp: MDP instance
+        epsilon (default: 1e-5): desired accuracy
+        values (default: None): optional initial values
+
+    Returns:
+        values, policy: dictionaries with state->value and state->action
+    """
+    if values is None:
+        values = {state: 0 for state in find_all_states(mdp)}
+
     while True:
         policy = {}
         new_values = {}
