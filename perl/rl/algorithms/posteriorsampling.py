@@ -1,10 +1,9 @@
 from collections import namedtuple
 import random
 
-from ..bayesian import Normal, Dirichlet
-from ..mdp import MDP, find_all_states, value_iteration
-from ..simulator import run
-from ..util import sars
+from ...bayesian import Normal, Dirichlet
+from ...mdp import MDP, value_iteration
+from .base import Algorithm
 
 Posterior = namedtuple("Posterior", "transitions rewards indexer")
 
@@ -86,44 +85,24 @@ def update_posteriors(steps, posterior):
         # update reward
         posterior.rewards[(state, action)].update(reward)
 
-def posterior_sampling(env, episodes, d_reward=lambda: Normal(0, 1, 1), verbose=None):
-    sampler, posterior = create_sampler(env, d_reward)
-    episode_rewards = []
 
-    cum_rewards = 0
-    for episode in range(episodes):
-        # start with low accuracy value iteration for efficiency
-        # also, after some samples reuse old value for faster value_iteration
-        values, policy = value_iteration(sampler(), epsilon=1e-3)
+class PosteriorSampling(Algorithm):
+    def __init__(self, env, d_reward=lambda: Normal(0, 1, 1)):
+        self.env = env
+        self.sampler, self.posterior = create_sampler(env, d_reward)
 
-        steps = sars(run(env, policy))
-        update_posteriors(steps, posterior)
+    def init_episode(self):
+        values, policy = value_iteration(self.sampler(), epsilon=1e-3)
+        self.policy = policy
 
-        # log rewards
-        _, _, rewards, _ = zip(*steps)
-        total_reward = sum(env.discount**t * reward
-                for t, reward in enumerate(rewards))
-        cum_rewards += total_reward
-        episode_rewards.append(total_reward)
+    def act(self, state):
+        return self.policy[state]
 
-        if verbose and (episode+1) % verbose == 0:
-            print("Episode: {}, cumulative reward: {}".format(episode+1, cum_rewards))
+    def learn(self, steps):
+        update_posteriors(steps, self.posterior)
 
-
-    return posterior, episode_rewards
-
-
-# todo: finish top two sampling
-# def top_two_sampling(sampler, accept_condition, beta=0.5, max_tries=10):
-#     """ rough sketch of top-two sampler """
-#     first = sampler()
-#     if random.random() < beta:
-#         return first
-
-#     number_of_tries = 0
-#     while True:
-#         number_of_tries += 1
-#         second = sampler()
-#         if number_of_tries > max_tries or accept_condition(first, second):
-#             return second
+    @property
+    def optimal_policy(self):
+        value, policy = value_iteration(map_mdp(self.env, self.posterior))
+        return policy
 
