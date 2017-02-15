@@ -5,7 +5,7 @@ MDP is a collection of:
 
     initial_states -> [(prob, state)]
     actions(state) -> [action]
-    transistion(state, action) -> [(prob, new_state, reward)]
+    transistion(state, action) -> [(prob, (new_state, reward))]
     discount -> [0, 1]
 
 
@@ -21,7 +21,7 @@ def find_all_states(mdp):
     while queue != []:
         state = queue.pop()
         for action in mdp.actions(state):
-            for prob, new_state, reward in mdp.transitions(state, action):
+            for prob, (new_state, reward) in mdp.transitions(state, action):
                 if new_state and new_state not in states:
                     states.add(new_state)
                     queue.append(new_state)
@@ -30,7 +30,7 @@ def find_all_states(mdp):
 
 def bellman(mdp, state, action, values):
     return sum(prob * (reward + mdp.discount * values.get(new_state, 0))
-            for prob, new_state, reward in mdp.transitions(state, action))
+            for prob, (new_state, reward) in mdp.transitions(state, action))
 
 
 def value_iteration(mdp, epsilon=1e-5):

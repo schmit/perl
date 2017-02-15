@@ -1,8 +1,10 @@
 from .base import MDP
 
 
-def Numberline(n=5, discount=0.9):
-    def initial_state():
+def Numberline(n=5, discount=1, p_success=0.6, p_die=0.1):
+    assert 1 - p_success - p_die >= 0, "p_success + p_die > 1"
+
+    def initial_states():
         return [(1, 0)]
 
     def actions(state):
@@ -15,8 +17,9 @@ def Numberline(n=5, discount=0.9):
         success_reward = 1 if success == n else 0
         success_state = success if abs(success) != n else None
 
-        return [(0.6, success_state, success_reward),
-                (0.4, state, 0)]
+        return [(p_success, (success_state, success_reward)),
+                (1-p_success-p_die, (state, 0)),
+                (p_die, (None, 0))]
 
-    return MDP(initial_state, actions, transitions, discount)
+    return MDP(initial_states, actions, transitions, discount)
 
