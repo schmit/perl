@@ -26,7 +26,7 @@ def find_all_states(mdp):
                     states.add(new_state)
                     queue.append(new_state)
 
-    return states
+    return sorted(list(states))
 
 def bellman(mdp, state, action, values):
     return sum(prob * (reward + mdp.discount * values.get(new_state, 0))

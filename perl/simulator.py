@@ -1,7 +1,7 @@
 from perl.util import sample, sars
 
-def run(mdp, policy, verbose=False):
-    state, idx = sample(mdp.initial_states())
+def run(env, policy, verbose=False):
+    state, idx = sample(env.initial_states())
     history = [state]
 
     if verbose:
@@ -9,7 +9,7 @@ def run(mdp, policy, verbose=False):
 
     while state is not None:
         action = policy[state]
-        (state, reward), idx = sample(mdp.transitions(state, action))
+        (state, reward), idx = env.transition(state, action)
         history += [action, reward, state]
         if verbose:
             print("Action: {}\tReward: {}\tNew state: {}".format(action, reward, state))
