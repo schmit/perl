@@ -38,7 +38,9 @@ def sample_mdp(mdp, all_states, posterior_transitions, posterior_rewards):
         return [(p, (all_states[i], sampled_rewards[(state, action)]))
                 for i, p in enumerate(sampled_transitions[(state, action)][:-1])]
 
-    return MDP(mdp.initial_states, mdp.actions, transitions, mdp.discount)
+    # make sure discount is less than one because sampled MDP might have
+    # infinite cycles
+    return MDP(mdp.initial_states, mdp.actions, transitions, min(0.9, mdp.discount))
 
 def map_mdp(mdp, all_states, posterior_transitions, posterior_rewards):
     map_transitions = {(state, action): posterior.map()
@@ -61,19 +63,34 @@ def update_posteriors(steps, posterior_transitions, posterior_rewards, state_ind
         # update reward
         posterior_rewards[(state, action)].update(reward)
 
-def posterior_sampling(mdp, episodes, d_reward=lambda: Normal(0, 1, 1), epsilon=1e-3):
+def posterior_sampling(mdp, episodes, d_reward=lambda: Normal(0, 1, 1), verbose=None):
     sampler, posterior_transitions, posterior_rewards, indexer = create_sampler(mdp, d_reward)
     episode_rewards = []
 
+    # initial values are none
+    values = None
+
+    cum_rewards = 0
     for episode in range(episodes):
-        values, policy = value_iteration(sampler(), epsilon=epsilon)
+        # start with low accuracy value iteration for efficiency
+        # also, after some samples reuse old value for faster value_iteration
+        values, policy = value_iteration(sampler(),
+                epsilon=10/(episode+1)**1.8,
+                values=None if episode < 20 else values)
+
         steps = sars(run(mdp, policy))
         update_posteriors(steps, posterior_transitions, posterior_rewards, indexer)
 
         # log rewards
         _, _, rewards, _ = zip(*steps)
-        episode_rewards.append(sum(mdp.discount**t * reward
-            for t, reward in enumerate(rewards)))
+        total_reward = sum(mdp.discount**t * reward
+                for t, reward in enumerate(rewards))
+        cum_rewards += total_reward
+        episode_rewards.append(total_reward)
+
+        if verbose and episode % verbose == 0:
+            print("Episode: {}, cumulative reward: {}".format(episode+1, cum_rewards))
+
 
     return sampler, posterior_transitions, posterior_rewards, indexer, episode_rewards
 
