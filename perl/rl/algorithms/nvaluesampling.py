@@ -25,3 +25,5 @@ class NValueSampling(PosteriorSampling):
         policy_values = [(pair[1], initial_value(self.env, pair[0])) for pair in mdp_samples]
         self.policy = max(policy_values, key=lambda x: x[1])[0]
 
+    def __repr__(self):
+        return "N-Value Sampling"

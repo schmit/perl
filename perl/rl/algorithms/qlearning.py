@@ -5,11 +5,16 @@ from .core import Algorithm
 
 
 def greedy(qvals, *args):
+    """ Take action with highest Q-value """
     # add a bit of randomness to break ties
     action, qval = max(qvals, key=lambda t: t[1] + random.random() * 0.001)
     return action
 
 def epsgreedy(qvals, num_episode):
+    """
+    With probability 1/100 + 1/sqrt(num_episode + 1)
+    take a random action, otherwise take the greedy action
+    """
     epsilon = 1/100 + 1/math.sqrt(num_episode + 1)
     if random.random() < epsilon:
         action, _ = random.choice(qvals)
@@ -19,6 +24,11 @@ def epsgreedy(qvals, num_episode):
 
 
 class Qlearning(Algorithm):
+    """
+    Q-learning algorithm
+
+    Currently learns using TD(0), using other TD learning methods is todo
+    """
     def __init__(self, env, lr=0.1, discount=0.9, dithering=epsgreedy):
         self.lr = lr
         self.discount = discount
@@ -52,5 +62,6 @@ class Qlearning(Algorithm):
                     for state in self.states}
         return policy
 
-
+    def __repr__(self):
+        return "Q-learning"
 
