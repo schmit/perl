@@ -1,5 +1,4 @@
 
-
 class Algorithm:
     """ Base class for RL algorithm """
     def init_episode(self):

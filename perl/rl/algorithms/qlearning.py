@@ -1,6 +1,6 @@
 from collections import defaultdict
 import random
-from .base import Algorithm
+from .core import Algorithm
 from ...mdp import bellman
 
 

@@ -1,6 +1,6 @@
 
 from perl.mdp import MDP, value_iteration
-from perl.mdp.base import find_all_states
+from perl.mdp import find_all_states
 from perl.mdp.numberline import Numberline
 
 numberline = Numberline()

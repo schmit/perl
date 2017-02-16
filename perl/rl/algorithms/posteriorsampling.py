@@ -3,7 +3,7 @@ import random
 
 from ...bayesian import Normal, Dirichlet
 from ...mdp import MDP, value_iteration
-from .base import Algorithm
+from .core import Algorithm
 
 Posterior = namedtuple("Posterior", "transitions rewards indexer")
 
