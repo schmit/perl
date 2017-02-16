@@ -1,3 +1,4 @@
+import random
 import statistics
 
 from ...bayesian import Normal
@@ -75,7 +76,7 @@ class TwoStepDecoupledPosteriorSampling(PosteriorSampling):
             mdp_2 = self.sampler()
             value_1, policy_1 = value_iteration(mdp_1, epsilon=1e-3)
             value_2, policy_2 = value_iteration(mdp_2, epsilon=1e-3)
-            
+
             opt_value_1 = env_value(self.env, value_1)
             opt_value_2 = env_value(self.env, value_2)
             alt_value_1 = env_value(self.env, policy_iteration(mdp_1, policy_2))
