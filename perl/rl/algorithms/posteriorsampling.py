@@ -91,6 +91,8 @@ class PosteriorSampling(Algorithm):
         self.env = env
         self.sampler, self.posterior = create_sampler(env, d_reward)
 
+        self._updated_policy = False
+
     def init_episode(self):
         values, policy = value_iteration(self.sampler(), epsilon=1e-3)
         self.policy = policy
@@ -100,9 +102,15 @@ class PosteriorSampling(Algorithm):
 
     def learn(self, steps):
         update_posteriors(steps, self.posterior)
+        self._updated_policy = False
 
     @property
     def optimal_policy(self):
-        value, policy = value_iteration(map_mdp(self.env, self.posterior))
-        return policy
+        # cache optimal policy
+        if not self._updated_policy:
+            value, policy = value_iteration(map_mdp(self.env, self.posterior))
+            self._opt_policy = policy
+            self._updated_policy = True
+
+        return self._opt_policy
 
