@@ -43,7 +43,7 @@ def live(env, algo, num_episodes=1, verbose=None):
 
     return rewards
 
-def reward_path(env, name, algo, num_episodes, num_repeats=20,
+def reward_path(env, algo, num_episodes, num_repeats=20,
         num_test_episodes=1000, verbose=True):
     path = []
     total_episodes = 0
@@ -63,7 +63,7 @@ def reward_path(env, name, algo, num_episodes, num_repeats=20,
             print("{}/{} done...".format(total_episodes, num_episodes * num_repeats))
 
     t_end = time.time()
-    print("[{}] Ran path in {} seconds.".format(name, t_end - t_start))
+    print("[{}] Ran path in {} seconds.".format(algo, t_end - t_start))
 
     return path
 

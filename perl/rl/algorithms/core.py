@@ -10,6 +10,9 @@ class Algorithm:
     def learn(self, episode):
         pass
 
+    def __repr__(self):
+        return "Algorithm"
+
 
 class FixedPolicy(Algorithm):
     def __init__(self, policy):
@@ -18,4 +21,6 @@ class FixedPolicy(Algorithm):
     def act(self, state):
         return self.policy[state]
 
+    def __repr__(self):
+        return "FixedPolicy"
 

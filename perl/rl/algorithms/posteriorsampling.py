@@ -8,6 +8,17 @@ from .core import Algorithm
 Posterior = namedtuple("Posterior", "transitions rewards indexer")
 
 def create_prior(all_states, actions, p_reward = lambda: Normal(0, 1, 1)):
+    """
+    Creates a prior for an MDP with <all_states> states and <actions> actions.
+
+    Args:
+        - all_states: list with all states
+        - actions: function(state) -> [actions]
+        - p_reward: prior for reward distribution (default: Normal(0, 1, 1))
+
+    returns:
+        Posterior object
+    """
     all_states = sorted(all_states)
     nstates = len(all_states)
 
@@ -23,6 +34,9 @@ def create_prior(all_states, actions, p_reward = lambda: Normal(0, 1, 1)):
     return Posterior(transitions, rewards, indexer)
 
 def sample_posterior(posterior):
+    """
+    Samples transitions and rewards from posterior
+    """
     transitions = {(state, action): post.sample()
             for (state, action), post in posterior.transitions.items()}
     rewards = {(state, action): post.sample()
@@ -30,6 +44,9 @@ def sample_posterior(posterior):
     return transitions, rewards
 
 def get_map(posterior):
+    """
+    Return the MAP of the posterior
+    """
     transitions = {(state, action): post.map
             for (state, action), post in posterior.transitions.items()}
     rewards = {(state, action): post.map
@@ -51,6 +68,9 @@ def create_sampler(env, p_reward = lambda: Normal(0, 1, 1)):
     return sampler, posterior
 
 def sample_mdp(env, posterior):
+    """
+    Sample an MDP from the posterior
+    """
     sampled_transitions, sampled_rewards = sample_posterior(posterior)
 
     def transitions(state, action):
@@ -64,6 +84,9 @@ def sample_mdp(env, posterior):
     return MDP(env.initial_states, env.actions, transitions, min(0.97, env.discount))
 
 def map_mdp(env, posterior):
+    """
+    Return the MDP by taking the MAP for each element in the posterior
+    """
     map_transitions, map_rewards = get_map(posterior)
 
     def transitions(state, action):
@@ -77,6 +100,10 @@ def map_mdp(env, posterior):
     return MDP(env.initial_states, env.actions, transitions, min(0.97, env.discount))
 
 def update_posteriors(steps, posterior):
+    """
+    Take an episode in the form of <steps> and updates
+    the <posterior> using the sars pairs (in-place)
+    """
     for state, action, reward, new_state in steps:
         # update transition:
         posterior.transitions[(state, action)].update(posterior.indexer[new_state])
@@ -111,4 +138,7 @@ class PosteriorSampling(Algorithm):
             self._updated_policy = True
 
         return self._opt_policy
+
+    def __repr__(self):
+        return "Posterior Sampling"
 
