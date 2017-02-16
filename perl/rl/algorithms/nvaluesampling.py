@@ -21,7 +21,10 @@ class NValueSampling(PosteriorSampling):
         self._updated_policy = False
 
     def init_episode(self):
-        mdp_samples = [value_iteration(self.sampler()) for _ in range(self.n)]
+        mdp_samples = [value_iteration(self.sampler(), epsilon=1e-3) for _ in range(self.n)]
         policy_values = [(pair[1], initial_value(self.env, pair[0])) for pair in mdp_samples]
         self.policy = max(policy_values, key=lambda x: x[1])[0]
+
+
+
 
