@@ -25,6 +25,8 @@ class Qlearning(Algorithm):
         self.discount = discount
         self.Q = defaultdict(lambda: defaultdict(lambda: 0))
         self.dithering = dithering
+
+        self.states = env.states
         self.actions = env.actions
 
         # episode counter
@@ -43,5 +45,13 @@ class Qlearning(Algorithm):
             self.Q[state][action] += self.lr * residual
 
         self.episode += 1
+
+    @property
+    def optimal_policy(self):
+        policy = {state: max((action for action in self.actions(state)),
+                             key=lambda action: self.Q[state][action])
+                    for state in self.states}
+        return policy
+
 
 
