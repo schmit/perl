@@ -33,6 +33,8 @@ class Normal:
 
 class Dirichlet:
     def __init__(self, k, a0):
+        self.a0 = a0
+        self.k = k
         self.params = [a0 for _ in range(k)]
 
     def update(self, X):
@@ -59,6 +61,8 @@ class Dirichlet:
 
 class Beta(Dirichlet):
     def __init__(self, alpha, beta):
+        self.a0 = alpha
+        self.b0 = beta
         self.params = [beta, alpha]
 
     def sample(self):
