@@ -1,3 +1,4 @@
+import math
 from statistics import mean, stdev
 import time
 
@@ -5,6 +6,17 @@ from .algorithms import FixedPolicy
 from ..util import sample, sars
 
 def episode(env, algo, verbose=False):
+    """
+    Runs a single episode of a learning algorithm in an environment
+
+    Args:
+        - env: Environment
+        - algo: Learning algorithm (e.g. Qlearning)
+        - verbose: Bool indicating whether steps should be printed
+
+    Returns:
+        history list: [s, a, r, s, a, r, s]
+    """
     algo.init_episode()
 
     state, _ = sample(env.initial_states())
@@ -23,6 +35,18 @@ def episode(env, algo, verbose=False):
     return history
 
 def live(env, algo, num_episodes=1, verbose=None):
+    """
+    Run a learning algorithm on an environment
+
+    Args:
+        - env: Learning Environment
+        - algo: Learning algorithm (e.g. Qlearning)
+        - num_episodes: Number of episodes in the environment
+        - verbose: Integer specifying how often progress should be printed (default: 0)
+
+    Returns:
+        list of discounted sum of rewards for each episode
+    """
     rewards = []
     total_rewards = 0
     for epi in range(num_episodes):
@@ -45,6 +69,23 @@ def live(env, algo, num_episodes=1, verbose=None):
 
 def reward_path(env, algo, num_episodes, num_repeats=20,
         num_test_episodes=1000, verbose=True):
+    """
+    Run <live> for <num_repeats> times for <num_episodes> length,
+    and approximate the value of the current policy between calls to <live>.
+
+    Args:
+        - env: Environment
+        - algo: Learning algorithm
+        - num_episodes: Number of episodes for each <live> call
+        - num_repeats: Number of calls to <live>
+        - num_test_episodes: Number of episodes to test the current best policy
+        - verbose: Bool indicating output
+
+    Returns:
+        List with performance metrics after each repeat of <live>
+        [(num_episodes, mean_learning_reward, sd_learning_reward,
+          mean_test_reward, sd_test_reward)]
+    """
     path = []
     total_episodes = 0
 
@@ -56,8 +97,11 @@ def reward_path(env, algo, num_episodes, num_repeats=20,
         current_policy = algo.optimal_policy
         testing_rewards = live(env, FixedPolicy(current_policy), num_test_episodes)
 
-        path.append((total_episodes, mean(learning_rewards), stdev(learning_rewards),
-                     mean(testing_rewards), stdev(testing_rewards)))
+        path.append((total_episodes,
+                     mean(learning_rewards),
+                     stdev(learning_rewards) / math.sqrt(num_episodes),
+                     mean(testing_rewards),
+                     stdev(testing_rewards) / math.sqrt(num_test_episodes)))
 
         if verbose:
             print("{}/{} done...".format(total_episodes, num_episodes * num_repeats))
