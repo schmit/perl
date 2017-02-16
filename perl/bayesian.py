@@ -43,8 +43,11 @@ class Dirichlet:
 
     @property
     def map(self):
-        total = sum(self.params)
-        return [p/total for p in self.params]
+        k = len(p for p in self.params if p > 1)
+        if k == 0:
+            raise ValueError('MAP undefined; Dirichlet({}) Posterior.'.format(self.params))
+        total = sum(p for p in self.params if p > 1)
+        return [(p-1)/(total-k) if p > 1 else 0 for p in self.params]
 
     def __repr__(self):
         return "Dirichlet({})".format(self.params)
@@ -59,7 +62,9 @@ class Beta(Dirichlet):
 
     @property
     def map(self):
-        return self.params[1] / sum(self.params)
+        if self.params[0] <= 1 or self.params[1] <= 1:
+            raise ValueError('MAP undefined; Beta({}, {}) Posterior.'.format(self.params[1], self.params[0]))
+        return (self.params[1] - 1) / (sum(self.params) - 2)
 
     def __repr__(self):
         return "Beta({}, {})".format(self.params[1], self.params[0])

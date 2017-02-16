@@ -16,7 +16,6 @@ def epsgreedy(qvals, epsilon=0.1):
     return action
 
 
-
 class Qlearning(Algorithm):
     def __init__(self, env, lr=0.01, discount=0.9, dithering=greedy):
         self.lr = lr
