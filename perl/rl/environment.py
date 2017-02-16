@@ -27,4 +27,4 @@ def env_value(env, values):
     Returns:
         overall value of environment
     """
-    return sum(prob * value for prob, val in env.initial_states())
+    return sum(prob * values[state] for prob, state in env.initial_states())
