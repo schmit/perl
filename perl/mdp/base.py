@@ -5,9 +5,8 @@ MDP is a collection of:
 
     initial_states -> [(prob, state)]
     actions(state) -> [action]
-    transistion(state, action) -> [(prob, (new_state, reward))]
+    transition(state, action) -> [(prob, (new_state, reward))]
     discount -> [0, 1]
-
 
     Note: new_state == None indicates end of episode
 """

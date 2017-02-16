@@ -5,6 +5,8 @@ from ..util import sample
 
 Environment = namedtuple("Environment", "states actions transition initial_states discount")
 
+# for reference, an MDP is:
+# MDP = namedtuple("MDP", "initial_states actions transitions discount")
 
 def mdp_to_env(mdp):
     all_states = find_all_states(mdp)
