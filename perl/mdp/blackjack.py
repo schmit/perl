@@ -1,7 +1,7 @@
 from collections import namedtuple
 import random
 
-from .base import MDP
+from .core import MDP
 
 Hand = namedtuple("Hand", "sum_cards aces")
 

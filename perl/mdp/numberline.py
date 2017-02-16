@@ -1,4 +1,4 @@
-from .base import MDP
+from .core import MDP
 
 
 def Numberline(n=5, discount=1, p_success=0.6, p_die=0.1):
