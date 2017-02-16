@@ -43,7 +43,7 @@ def live(env, algo, num_episodes=1, verbose=None):
 
     return rewards
 
-def rewardpath(env, algo, num_episodes, num_repeats=20,
+def reward_path(env, algo, num_episodes, num_repeats=20,
         num_test_episodes=1000, verbose=True):
     path = []
     total_episodes = 0
