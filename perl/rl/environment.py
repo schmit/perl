@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 from ..mdp import find_all_states
-from ..util import sample 
+from ..util import sample
 
 Environment = namedtuple("Environment", "states actions transition initial_states discount")
 
@@ -14,9 +14,5 @@ def mdp_to_env(mdp):
 
     return Environment(all_states, mdp.actions, transition, mdp.initial_states, mdp.discount)
 
-def initial_value(env, values):
-    value = 0
-    for prob, state in env.initial_states():
-        value += prob * values[state]
-    return value
-
+def env_value(env, values):
+    return sum(prob * value for prob, val in env.initial_states())
