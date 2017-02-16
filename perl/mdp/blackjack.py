@@ -27,7 +27,7 @@ def iswin(player_hand, dealer_hand):
         return True
     return compute_score(player_hand) > compute_score(dealer_hand)
 
-def Blackjack(cards):
+def Blackjack(cards=["A", 2, 3, 4, 5, 6, 7, 8, 9, 10]):
     """
     Variant of Blackjack game with fixed threshold
 

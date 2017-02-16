@@ -1,3 +1,7 @@
+from statistics import mean, stdev
+import time
+
+from .algorithms import FixedPolicy
 from ..util import sample, sars
 
 def episode(env, algo, verbose=False):
@@ -39,8 +43,33 @@ def live(env, algo, num_episodes=1, verbose=None):
 
     return rewards
 
+def reward_path(env, algo, num_episodes, num_repeats=20,
+        num_test_episodes=1000, verbose=True):
+    path = []
+    total_episodes = 0
+
+    t_start = time.time()
+    for repeat in range(num_repeats):
+        total_episodes += num_episodes
+        learning_rewards = live(env, algo, num_episodes)
+
+        current_policy = algo.optimal_policy
+        testing_rewards = live(env, FixedPolicy(current_policy), num_test_episodes)
+
+        path.append((total_episodes, mean(learning_rewards), stdev(learning_rewards),
+                     mean(testing_rewards), stdev(testing_rewards)))
+
+        if verbose:
+            print("{}/{} done...".format(total_episodes, num_episodes * num_repeats))
+
+    t_end = time.time()
+    print("Ran path in {} seconds".format(t_end - t_start))
+
+    return path
+
 
 def discounted_reward(history, discount):
     _, _, rewards, _ = zip(*sars(history))
     return sum(discount**i * reward for i, reward in enumerate(rewards))
+
 
