@@ -29,7 +29,11 @@ class Qlearning(Algorithm):
 
     Currently learns using TD(0), using other TD learning methods is todo
     """
-    def __init__(self, env, lr=0.1, discount=0.9, dithering=epsgreedy):
+    def __init__(self,
+            env,
+            lr=lambda num_episodes: min(1, 1/num_episodes**0.5),
+            discount=0.9,
+            dithering=epsgreedy):
         self.lr = lr
         self.discount = discount
         self.Q = defaultdict(lambda: defaultdict(lambda: 0))
@@ -51,7 +55,7 @@ class Qlearning(Algorithm):
             if new_state is not None:
                 residual += self.discount * max(qval for action, qval in self.Q[new_state].items())
 
-            self.Q[state][action] += self.lr * residual
+            self.Q[state][action] += self.lr(self.episode) * residual
 
         self.episode += 1
 
