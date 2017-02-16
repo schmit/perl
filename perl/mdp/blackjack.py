@@ -14,7 +14,7 @@ def compute_score(hand):
 
 def update_hand(state, card):
     if card == "A":
-        new_state = Hand(state.sum_cards, min(2, state.aces+1))
+        new_state = Hand(state.sum_cards, 1)
     else:
         new_state = Hand(state.sum_cards + card, state.aces)
 
