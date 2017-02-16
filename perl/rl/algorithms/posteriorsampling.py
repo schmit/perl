@@ -7,14 +7,14 @@ from .base import Algorithm
 
 Posterior = namedtuple("Posterior", "transitions rewards indexer")
 
-def create_prior(all_states, actions, d_reward = lambda: Normal(0, 1, 1)):
+def create_prior(all_states, actions, p_reward = lambda: Normal(0, 1, 1)):
     all_states = sorted(all_states)
     nstates = len(all_states)
 
     transitions = {(state, action): Dirichlet(nstates + 1, 1/(nstates+2))
             for state in all_states for action in actions(state)}
 
-    rewards = {(state, action): d_reward()
+    rewards = {(state, action): p_reward()
             for state in all_states for action in actions(state)}
 
     indexer = {state: idx for idx, state in enumerate(all_states)}
