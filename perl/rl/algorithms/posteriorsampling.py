@@ -53,7 +53,7 @@ def get_map(posterior):
             for (state, action), post in posterior.rewards.items()}
     return transitions, rewards
 
-def create_sampler(env, p_reward = lambda: Normal(0, 1, 1)):
+def create_sampler(env, p_reward = lambda: Normal(0, 1, 1), discount=0.97):
     """
     Create a sampler to sample MDPs from a posterior
 
@@ -63,11 +63,11 @@ def create_sampler(env, p_reward = lambda: Normal(0, 1, 1)):
     """
     # sorted so we can always recover the order from the indexer
     posterior = create_prior(env.states, env.actions, p_reward)
-    sampler = lambda: sample_mdp(env, posterior)
+    sampler = lambda: sample_mdp(env, posterior, discount)
 
     return sampler, posterior
 
-def sample_mdp(env, posterior):
+def sample_mdp(env, posterior, discount=0.97):
     """
     Sample an MDP from the posterior
     """
@@ -81,7 +81,7 @@ def sample_mdp(env, posterior):
 
     # make sure discount is less than one because sampled MDP might have
     # infinite cycles
-    return MDP(env.initial_states, env.actions, transitions, min(0.97, env.discount))
+    return MDP(env.initial_states, env.actions, transitions, min(discount, env.discount))
 
 def map_mdp(env, posterior):
     """
@@ -112,9 +112,9 @@ def update_posteriors(steps, posterior):
 
 
 class PosteriorSampling(Algorithm):
-    def __init__(self, env, p_reward=lambda: Normal(0, 1, 1)):
+    def __init__(self, env, p_reward=lambda: Normal(0, 1, 1), discount=0.95):
         self.env = env
-        self.sampler, self.posterior = create_sampler(env, p_reward)
+        self.sampler, self.posterior = create_sampler(env, p_reward, discount)
 
         self._updated_policy = False
 
