@@ -7,20 +7,27 @@ from .core import Algorithm
 
 Posterior = namedtuple("Posterior", "transitions rewards indexer")
 
-def create_prior(all_states, actions, p_reward = lambda: NormalPrior(0, 1, 1)):
+def create_prior(states, actions, transitions, p_reward = lambda: NormalPrior(0, 1, 1)):
     """
-    Creates a prior for an MDP with <all_states> states and <actions> actions.
+    Creates a prior for an MDP with <states> states and <actions> actions,
+    based on <transitions> in an attempt to copy the structure of the MDP
 
     Args:
-        - all_states: list with all states
+        - states: list with all states
         - actions: function(state) -> [actions]
-        - p_reward: prior for reward distribution (default: NormalPrior(0, 1, 1))
+        - transitions: function(state, action) -> [(prob, (new_state, reward))]
+        - p_reward: prior for reward distribution (default: Normal(0, 1, 1))
 
     returns:
         Posterior object
     """
-    all_states = sorted(all_states)
-    nstates = len(all_states)
+    def reachable_states(state, action):
+        """ Return states reachable from (state, action)-pair """
+        return frozenset(new_state
+                for _, (new_state, _) in transitions(state, action))
+
+    states = sorted(states)
+    nstates = len(states)
 
     transitions = {(state, action): DirichletPrior(nstates + 1, 1/(nstates+2))
             for state in all_states for action in actions(state)}
@@ -53,16 +60,16 @@ def get_map(posterior):
             for (state, action), post in posterior.rewards.items()}
     return transitions, rewards
 
-def create_sampler(env, p_reward = lambda: NormalPrior(0, 1, 1), discount=0.97):
+def create_sampler(mdp, p_reward = lambda: NormalPrior(0, 1, 1), discount=0.97):
     """
     Create a sampler to sample MDPs from a posterior
 
     Args:
-        - env: learning environment
+        - mdp: MDP to be learned
         - p_reward: prior over distributions of reward
     """
     # sorted so we can always recover the order from the indexer
-    posterior = create_prior(env.states, env.actions, p_reward)
+    posterior = create_prior(mdp.states, mdp.actions, mdp.transitions, p_reward)
     sampler = lambda: sample_mdp(env, posterior, discount)
 
     return sampler, posterior
@@ -73,6 +80,7 @@ def sample_mdp(env, posterior, discount=0.97):
     """
     n_states = len(env.states)
     sampled_transitions, sampled_rewards = sample_posterior(posterior)
+    n_states = len(env.states)
 
     def transitions(state, action):
         # note do not consider the last sampled transition probability
