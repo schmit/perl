@@ -91,23 +91,31 @@ def reward_path(env, algo, num_episodes, num_repeats=20,
 
     t_start = time.time()
     for repeat in range(num_repeats):
+        # learn
         total_episodes += num_episodes
         learning_rewards = live(env, algo, num_episodes)
 
+        # test
         current_policy = algo.optimal_policy
         testing_rewards = live(env, FixedPolicy(current_policy), num_test_episodes)
 
-        path.append((total_episodes,
-                     mean(learning_rewards),
-                     stdev(learning_rewards) / math.sqrt(num_episodes),
-                     mean(testing_rewards),
-                     stdev(testing_rewards) / math.sqrt(num_test_episodes)))
+        # log
+        performance = (total_episodes,
+                       mean(learning_rewards),
+                       stdev(learning_rewards) / math.sqrt(num_episodes),
+                       mean(testing_rewards),
+                       stdev(testing_rewards) / math.sqrt(num_test_episodes))
+        path.append(performance)
 
+        # print
         if verbose:
-            print("{}/{} done...".format(total_episodes, num_episodes * num_repeats))
+            print("{}/{} done... {:.2f} - {:.2f}".format(total_episodes,
+                num_episodes * num_repeats,
+                performance[1],
+                performance[3]))
 
     t_end = time.time()
-    print("[{}] Ran path in {} seconds.".format(algo, t_end - t_start))
+    print("[{}] simulation took {} seconds.".format(algo, t_end - t_start))
 
     return path
 
