@@ -15,7 +15,7 @@ def Norepeat(n=5, discount=1, p_success=0.9):
         assert action in range(1, n+1)
         # what happens if action succeeds
 
-        if len(state) == n:
+        if len(state) == n+1:
             # after collecting n numbers, game is over
             return [(1, (None, 0))]
 
