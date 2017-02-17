@@ -7,7 +7,7 @@ def sample(options):
 
     Returns both the random element and its index
     """
-    i, x = 0, random.random()
+    x = random.random()
     for prob, elem in options:
         if x < prob:
             return elem
