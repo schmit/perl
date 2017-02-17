@@ -7,7 +7,7 @@ numberline = Numberline()
 
 def test_find_all_states():
     all_states = find_all_states(numberline)
-    assert set(range(-4, 5)) == all_states
+    assert list(range(-4, 5)) == all_states
 
 
 
