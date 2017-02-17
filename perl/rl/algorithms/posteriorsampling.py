@@ -71,12 +71,14 @@ def sample_mdp(env, posterior, discount=0.97):
     """
     Sample an MDP from the posterior
     """
+    n_states = len(env.states)
     sampled_transitions, sampled_rewards = sample_posterior(posterior)
 
     def transitions(state, action):
         # note do not consider the last sampled transition probability
         # as that is the probability to end the MDP
-        return [(p, (env.states[i], sampled_rewards[(state, action)]))
+        return [(p, (env.states[i] if i < n_states else None,
+                     sampled_rewards[(state, action)]))
                 for i, p in enumerate(sampled_transitions[(state, action)][:-1])]
 
     # make sure discount is less than one because sampled MDP might have
@@ -87,12 +89,15 @@ def map_mdp(env, posterior):
     """
     Return the MDP by taking the MAP for each element in the posterior
     """
+    n_states = len(env.states)
     map_transitions, map_rewards = get_map(posterior)
 
     def transitions(state, action):
         # note do not consider the last sampled transition probability
         # as that is the probability to end the MDP
-        return [(p, (env.states[i], map_rewards[(state, action)]))
+        # also, add a bit of noise to map_rewards to break ties
+        return [(p, (env.states[i] if i < n_states else None,
+                     map_rewards[(state, action)] + random.random() * 1e-5))
                 for i, p in enumerate(map_transitions[(state, action)][:-1])]
 
     # make sure discount is less than one because sampled MDP might have
