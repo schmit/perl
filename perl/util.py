@@ -10,9 +10,8 @@ def sample(options):
     i, x = 0, random.random()
     for prob, elem in options:
         if x < prob:
-            return elem, i
+            return elem
         x -= prob
-        i += 1
     raise IndexError
 
 def sars(history):

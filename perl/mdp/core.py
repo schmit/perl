@@ -14,6 +14,11 @@ MDP is a collection of:
 MDP = namedtuple("MDP", "initial_states actions transitions discount")
 
 
+def mean(reward):
+    if isinstance(reward, int) or isinstance(reward, float):
+        return reward
+    return reward.mean
+
 def find_all_states(mdp):
     states = {state for prob, state in mdp.initial_states()}
     queue = [state for state in states]
@@ -28,7 +33,7 @@ def find_all_states(mdp):
     return sorted(list(states))
 
 def bellman(mdp, state, action, values):
-    return sum(prob * (reward + mdp.discount * values.get(new_state, 0))
+    return sum(prob * (mean(reward) + mdp.discount * values.get(new_state, 0))
             for prob, (new_state, reward) in mdp.transitions(state, action))
 
 

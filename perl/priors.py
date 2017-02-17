@@ -8,7 +8,7 @@ import random
 
 
 
-class Normal:
+class NormalPrior:
     def __init__(self, mu0, sigma0, sigma):
         self.mu0 = mu0
         self.sigma0 = sigma0
@@ -31,7 +31,7 @@ class Normal:
         return "Normal({:.2f},{:.2f})".format(self.mu0, self.sigma0)
 
 
-class Dirichlet:
+class DirichletPrior:
     def __init__(self, k, a0):
         self.a0 = a0
         self.k = k
@@ -48,18 +48,11 @@ class Dirichlet:
         total = sum(self.params)
         return [p/total for p in self.params]
 
-        # k = len([p for p in self.params if p > 1])
-        # if k == 0:
-        #     # raise ValueError('MAP undefined; Dirichlet({}) Posterior.'.format(self.params))
-        #     return [p/sum(self.params) for p in self.params]
-        # total = sum([p for p in self.params if p > 1])
-        # return [(p-1)/(total-k) if p > 1 else 0 for p in self.params]
-
     def __repr__(self):
         return "Dirichlet({})".format(self.params)
 
 
-class Beta(Dirichlet):
+class BetaPrior(DirichletPrior):
     def __init__(self, alpha, beta):
         self.a0 = alpha
         self.b0 = beta
@@ -74,7 +67,9 @@ class Beta(Dirichlet):
         #     # raise ValueError('MAP undefined; Beta({}, {}) Posterior.'.format(self.params[1], self.params[0]))
         #     return self.params[1]/sum(self.params)
         # return (self.params[1] - 1) / (sum(self.params) - 2)
+
         return self.params[1] / sum(self.params)
+
 
     def __repr__(self):
         return "Beta({}, {})".format(self.params[1], self.params[0])

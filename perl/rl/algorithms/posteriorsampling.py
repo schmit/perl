@@ -1,20 +1,20 @@
 from collections import namedtuple
 import random
 
-from ...bayesian import Normal, Dirichlet
+from ...priors import NormalPrior, DirichletPrior
 from ...mdp import MDP, value_iteration
 from .core import Algorithm
 
 Posterior = namedtuple("Posterior", "transitions rewards indexer")
 
-def create_prior(all_states, actions, p_reward = lambda: Normal(0, 1, 1)):
+def create_prior(all_states, actions, p_reward = lambda: NormalPrior(0, 1, 1)):
     """
     Creates a prior for an MDP with <all_states> states and <actions> actions.
 
     Args:
         - all_states: list with all states
         - actions: function(state) -> [actions]
-        - p_reward: prior for reward distribution (default: Normal(0, 1, 1))
+        - p_reward: prior for reward distribution (default: NormalPrior(0, 1, 1))
 
     returns:
         Posterior object
@@ -22,7 +22,7 @@ def create_prior(all_states, actions, p_reward = lambda: Normal(0, 1, 1)):
     all_states = sorted(all_states)
     nstates = len(all_states)
 
-    transitions = {(state, action): Dirichlet(nstates + 1, 1/(nstates+2))
+    transitions = {(state, action): DirichletPrior(nstates + 1, 1/(nstates+2))
             for state in all_states for action in actions(state)}
 
     rewards = {(state, action): p_reward()
@@ -53,7 +53,7 @@ def get_map(posterior):
             for (state, action), post in posterior.rewards.items()}
     return transitions, rewards
 
-def create_sampler(env, p_reward = lambda: Normal(0, 1, 1), discount=0.97):
+def create_sampler(env, p_reward = lambda: NormalPrior(0, 1, 1), discount=0.97):
     """
     Create a sampler to sample MDPs from a posterior
 
@@ -117,7 +117,7 @@ def update_posteriors(steps, posterior):
 
 
 class PosteriorSampling(Algorithm):
-    def __init__(self, env, p_reward=lambda: Normal(0, 1, 1), discount=0.95):
+    def __init__(self, env, p_reward=lambda: NormalPrior(0, 1, 1), discount=0.95):
         self.env = env
         self.sampler, self.posterior = create_sampler(env, p_reward, discount)
 
