@@ -37,7 +37,7 @@ def bellman(mdp, state, action, values):
             for prob, (new_state, reward) in mdp.transitions(state, action))
 
 
-def value_iteration(mdp, epsilon=1e-5, values=None):
+def value_iteration(mdp, epsilon=1e-3, values=None):
     """ Solve MDP using value iteration
 
     Args:
@@ -51,6 +51,7 @@ def value_iteration(mdp, epsilon=1e-5, values=None):
     if values is None:
         values = {state: 0 for state in find_all_states(mdp)}
 
+    iteration = 0
     while True:
         policy = {}
         new_values = {}
@@ -66,6 +67,11 @@ def value_iteration(mdp, epsilon=1e-5, values=None):
             return new_values, policy
         else:
             values = new_values
+
+        iteration += 1
+        if iteration > 1000:
+            print("Warning: value_iteration not converged after 1000 iterations")
+            return new_values, policy
 
 def policy_iteration(mdp, policy, epsilon=1e-5, values=None):
     """ Compute values of states when following <policy>
