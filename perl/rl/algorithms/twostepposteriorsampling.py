@@ -1,17 +1,28 @@
 import random
 import statistics
 
-from ...bayesian import Normal
-from ..environment import env_value
+from ...priors import NormalPrior
+from ..environment import mdp_to_env, env_value
 from ..memory import RingBuffer
 from ...mdp import policy_iteration, value_iteration
 from .posteriorsampling import PosteriorSampling, create_sampler
 
 
 class TwoStepPosteriorSampling(PosteriorSampling):
-    def __init__(self, env, p_reward=lambda: Normal(0, 1, 1), threshold=1.0, capacity=10):
-        self.env = env
-        self.sampler, self.posterior = create_sampler(env, p_reward)
+    def __init__(self,
+            mdp,
+            p_reward=lambda: NormalPrior(0, 1, 1),
+            discount=0.95,
+            threshold=1.0,
+            capacity=10):
+
+        self.env = mdp_to_env(mdp)
+        self.sampler, self.posterior = create_sampler(
+                mdp,
+                self.env,
+                p_reward,
+                discount)
+
         self.threshold = threshold
         self.buffer = RingBuffer(capacity)
 
@@ -52,7 +63,7 @@ class TwoStepPosteriorSampling(PosteriorSampling):
 
 
 class TwoStepDecoupledPosteriorSampling(PosteriorSampling):
-    def __init__(self, env, p_reward=lambda: Normal(0, 1, 1), threshold=1.0, capacity=10):
+    def __init__(self, env, p_reward=lambda: NormalPrior(0, 1, 1), threshold=1.0, capacity=10):
         self.env = env
         self.sampler, self.posterior = create_sampler(env, p_reward)
         self.threshold = threshold

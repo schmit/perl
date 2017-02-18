@@ -1,37 +1,54 @@
 from collections import namedtuple
 import random
 
-from ...bayesian import Normal, Dirichlet
-from ...mdp import MDP, value_iteration
+from ...priors import NormalPrior, DirichletPrior
+from ...mdp import MDP, value_iteration, find_all_states
+from ...rl.environment import mdp_to_env
 from .core import Algorithm
 
 Posterior = namedtuple("Posterior", "transitions rewards indexer")
+Indexer = namedtuple("Indexer", "from_index to_index")
 
-def create_prior(all_states, actions, p_reward = lambda: Normal(0, 1, 1)):
+def create_prior(states, actions, transitions, p_reward = lambda: NormalPrior(0, 1, 1)):
     """
-    Creates a prior for an MDP with <all_states> states and <actions> actions.
+    Creates a prior for an MDP with <states> states and <actions> actions,
+    based on <transitions> in an attempt to copy the structure of the MDP
 
     Args:
-        - all_states: list with all states
+        - states: list with all states
         - actions: function(state) -> [actions]
+        - transitions: function(state, action) -> [(prob, (new_state, reward))]
         - p_reward: prior for reward distribution (default: Normal(0, 1, 1))
 
     returns:
         Posterior object
     """
-    all_states = sorted(all_states)
-    nstates = len(all_states)
+    def reachable_states(state, action):
+        """ Return states reachable from (state, action)-pair """
+        return frozenset(new_state
+                for _, (new_state, _) in transitions(state, action))
 
-    transitions = {(state, action): Dirichlet(nstates + 1, 1/(nstates+2))
-            for state in all_states for action in actions(state)}
+    states = sorted(states)
+    nstates = len(states)
+
+    from_index = {}
+    to_index = {}
+    indexer = Indexer(from_index, to_index)
+
+    trans = {}
+
+    for state in states:
+        for action in actions(state):
+            reachable = reachable_states(state, action)
+            trans[(state, action)] = DirichletPrior(len(reachable), 1/(len(reachable) + 2))
+            for idx, new_state in enumerate(reachable):
+                from_index[(state, action, idx)] = new_state
+                to_index[(state, action, new_state)] = idx
 
     rewards = {(state, action): p_reward()
-            for state in all_states for action in actions(state)}
+            for state in states for action in actions(state)}
 
-    indexer = {state: idx for idx, state in enumerate(all_states)}
-    indexer[None] = nstates
-
-    return Posterior(transitions, rewards, indexer)
+    return Posterior(trans, rewards, indexer)
 
 def sample_posterior(posterior):
     """
@@ -53,21 +70,21 @@ def get_map(posterior):
             for (state, action), post in posterior.rewards.items()}
     return transitions, rewards
 
-def create_sampler(env, p_reward = lambda: Normal(0, 1, 1)):
+def create_sampler(mdp, env, p_reward = lambda: NormalPrior(0, 1, 1), discount=0.97):
     """
     Create a sampler to sample MDPs from a posterior
 
     Args:
-        - env: learning environment
+        - mdp: MDP to be learned
         - p_reward: prior over distributions of reward
     """
     # sorted so we can always recover the order from the indexer
-    posterior = create_prior(env.states, env.actions, p_reward)
-    sampler = lambda: sample_mdp(env, posterior)
+    posterior = create_prior(env.states, mdp.actions, mdp.transitions, p_reward)
+    sampler = lambda: sample_mdp(env, posterior, discount)
 
     return sampler, posterior
 
-def sample_mdp(env, posterior):
+def sample_mdp(env, posterior, discount=0.97):
     """
     Sample an MDP from the posterior
     """
@@ -76,24 +93,28 @@ def sample_mdp(env, posterior):
     def transitions(state, action):
         # note do not consider the last sampled transition probability
         # as that is the probability to end the MDP
-        return [(p, (env.states[i], sampled_rewards[(state, action)]))
-                for i, p in enumerate(sampled_transitions[(state, action)][:-1])]
+        return [(probability, (posterior.indexer.from_index[(state, action, idx)],
+                     sampled_rewards[(state, action)]))
+                for idx, probability in enumerate(sampled_transitions[(state, action)])]
 
     # make sure discount is less than one because sampled MDP might have
     # infinite cycles
-    return MDP(env.initial_states, env.actions, transitions, min(0.97, env.discount))
+    return MDP(env.initial_states, env.actions, transitions, min(discount, env.discount))
 
 def map_mdp(env, posterior):
     """
     Return the MDP by taking the MAP for each element in the posterior
     """
+    n_states = len(env.states)
     map_transitions, map_rewards = get_map(posterior)
 
     def transitions(state, action):
         # note do not consider the last sampled transition probability
         # as that is the probability to end the MDP
-        return [(p, (env.states[i], map_rewards[(state, action)]))
-                for i, p in enumerate(map_transitions[(state, action)][:-1])]
+        # also, add a bit of noise to map_rewards to break ties
+        return [(probability, (posterior.indexer.from_index[(state, action, idx)],
+                     map_rewards[(state, action)] + random.random() * 1e-5))
+                for idx, probability in enumerate(map_transitions[(state, action)])]
 
     # make sure discount is less than one because sampled MDP might have
     # infinite cycles
@@ -106,15 +127,22 @@ def update_posteriors(steps, posterior):
     """
     for state, action, reward, new_state in steps:
         # update transition:
-        posterior.transitions[(state, action)].update(posterior.indexer[new_state])
+        posterior.transitions[(state, action)].update(posterior.indexer.to_index[(state, action, new_state)])
         # update reward
         posterior.rewards[(state, action)].update(reward)
 
 
 class PosteriorSampling(Algorithm):
-    def __init__(self, env, p_reward=lambda: Normal(0, 1, 1)):
-        self.env = env
-        self.sampler, self.posterior = create_sampler(env, p_reward)
+    def __init__(self,
+            mdp,
+            p_reward=lambda: NormalPrior(0, 1, 1),
+            discount=0.95):
+        self.env = mdp_to_env(mdp)
+        self.sampler, self.posterior = create_sampler(
+                mdp,
+                self.env,
+                p_reward,
+                discount)
 
         self._updated_policy = False
 

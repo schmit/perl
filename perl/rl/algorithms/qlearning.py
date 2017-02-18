@@ -62,7 +62,7 @@ class Qlearning(Algorithm):
     @property
     def optimal_policy(self):
         policy = {state: max((action for action in self.actions(state)),
-                             key=lambda action: self.Q[state][action])
+                             key=lambda action: self.Q[state][action] + random.random() * 1e-5)
                     for state in self.states}
         return policy
 

@@ -7,12 +7,11 @@ def sample(options):
 
     Returns both the random element and its index
     """
-    i, x = 0, random.random()
+    x = random.random()
     for prob, elem in options:
         if x < prob:
-            return elem, i
+            return elem
         x -= prob
-        i += 1
     raise IndexError
 
 def sars(history):

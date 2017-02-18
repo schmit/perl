@@ -2,7 +2,7 @@ from collections import namedtuple
 import random
 import statistics
 
-from ...bayesian import Normal, Dirichlet
+from ...priors import NormalPrior
 from ...mdp import MDP, value_iteration, policy_iteration
 from .core import Algorithm
 from ..environment import env_value
@@ -10,7 +10,7 @@ from ..memory import RingBuffer
 from .posteriorsampling import *
 
 class NValueSampling(PosteriorSampling):
-    def __init__(self, env, p_reward=lambda: Normal(0, 1, 1), n=2):
+    def __init__(self, env, p_reward=lambda: NormalPrior(0, 1, 1), n=2):
         self.env = env
         self.sampler, self.posterior = create_sampler(env, p_reward)
         self.n = n

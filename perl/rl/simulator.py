@@ -5,6 +5,7 @@ import time
 from .algorithms import FixedPolicy
 from ..util import sample, sars
 
+
 def episode(env, algo, verbose=False):
     """
     Runs a single episode of a learning algorithm in an environment
@@ -19,7 +20,7 @@ def episode(env, algo, verbose=False):
     """
     algo.init_episode()
 
-    state, _ = sample(env.initial_states())
+    state = sample(env.initial_states())
     history = [state]
 
     if verbose:
@@ -27,7 +28,7 @@ def episode(env, algo, verbose=False):
 
     while state is not None:
         action = algo.act(state)
-        (state, reward), idx = env.transition(state, action)
+        state, reward = env.transition(state, action)
         history += [action, reward, state]
         if verbose:
             print("Action: {}\tReward: {}\tNew state: {}".format(action, reward, state))
