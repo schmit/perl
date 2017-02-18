@@ -10,7 +10,7 @@ def Sequence(win_condition, k=5, n=None, discount=1, p_success=0.9):
 
     n = k if n is None else n
     # state is a list of numbers played so far
-    # reward given iff at the end all numbers are different
+    # reward given iff at the end condition is satisfied
 
     def initial_states():
         return [(1, ())]
