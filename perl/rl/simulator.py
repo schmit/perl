@@ -3,6 +3,8 @@ from statistics import mean, stdev
 import time
 
 from .algorithms import FixedPolicy
+from ..mdp import policy_iteration
+from .environment import env_value
 from ..util import sample, sars
 
 
@@ -69,7 +71,7 @@ def live(env, algo, num_episodes=1, verbose=None):
     return rewards
 
 def reward_path(env, algo, num_episodes, num_repeats=20,
-        num_test_episodes=1000, verbose=True):
+        num_test_episodes=1000, mdp=None, verbose=True):
     """
     Run <live> for <num_repeats> times for <num_episodes> length,
     and approximate the value of the current policy between calls to <live>.
@@ -80,6 +82,7 @@ def reward_path(env, algo, num_episodes, num_repeats=20,
         - num_episodes: Number of episodes for each <live> call
         - num_repeats: Number of calls to <live>
         - num_test_episodes: Number of episodes to test the current best policy
+        - mdp (optional): if MDP is supplied, uses policy iteration to compute exact performance
         - verbose: Bool indicating output
 
     Returns:
@@ -98,25 +101,32 @@ def reward_path(env, algo, num_episodes, num_repeats=20,
 
         # test
         current_policy = algo.optimal_policy
-        testing_rewards = live(env, FixedPolicy(current_policy), num_test_episodes)
-
-        # log
-        performance = (total_episodes,
-                       mean(learning_rewards),
-                       stdev(learning_rewards) / math.sqrt(num_episodes),
-                       mean(testing_rewards),
-                       stdev(testing_rewards) / math.sqrt(num_test_episodes))
-        path.append(performance)
+        if mdp is None:
+            testing_rewards = live(env, FixedPolicy(current_policy), num_test_episodes)
+            performance = (total_episodes,
+                        mean(learning_rewards),
+                        stdev(learning_rewards) / math.sqrt(num_episodes),
+                        mean(testing_rewards),
+                        stdev(testing_rewards) / math.sqrt(num_test_episodes))
+            path.append(performance)
+        else:
+            testing_rewards = env_value(env, policy_iteration(mdp, current_policy))
+            performance = (total_episodes,
+                        mean(learning_rewards),
+                        stdev(learning_rewards) / math.sqrt(num_episodes),
+                        testing_rewards)
+            path.append(performance)
 
         # print
         if verbose:
-            print("{}/{} done... {:.2f} - {:.2f}".format(total_episodes,
+            print("{:5d}/{:5d} done... ({:2.2f} | {:2.2f})".format(total_episodes,
                 num_episodes * num_repeats,
                 performance[1],
                 performance[3]))
 
     t_end = time.time()
-    print("[{}] simulation took {} seconds.".format(algo, t_end - t_start))
+    if verbose:
+        print("[{}] simulation took {} seconds.".format(algo, t_end - t_start))
 
     return path
 
