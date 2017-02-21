@@ -49,7 +49,10 @@ class TwoStepPosteriorSampling(PosteriorSampling):
             alt_value_2 = env_value(self.env, policy_iteration(mdp_2, policy_1))
 
             z = opt_value_1 - alt_value_1 + opt_value_2 - alt_value_2
-            if z > max(self.buffer, default=0) or z >= self.threshold * statistics.median(self.buffer):
+            if z < 0:
+                print("Warning TSPS: z < 0")
+
+            if z > max(self.buffer, default=-1e16) or z >= self.threshold * statistics.median(self.buffer):
                 self.buffer.add(z)
                 self.policy = policy_2
                 return None
@@ -63,7 +66,7 @@ class TwoStepPosteriorSampling(PosteriorSampling):
 
 
 class TwoStepDecoupledPosteriorSampling(PosteriorSampling):
-    def __init__(self, env, p_reward=lambda: NormalPrior(0, 1, 1), threshold=1.0, capacity=10):
+    def __init__(self, env, p_reward=lambda: NormalPrior(0, 1, 1), threshold=1.0, capacity=20):
         self.env = env
         self.sampler, self.posterior = create_sampler(env, p_reward)
         self.threshold = threshold

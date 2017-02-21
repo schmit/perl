@@ -73,7 +73,7 @@ def value_iteration(mdp, epsilon=1e-3, values=None):
             print("Warning: value_iteration not converged after 1000 iterations")
             return new_values, policy
 
-def policy_iteration(mdp, policy, epsilon=1e-5, values=None):
+def policy_iteration(mdp, policy, epsilon=1e-3, values=None):
     """ Compute values of states when following <policy>
 
     Args:
