@@ -36,7 +36,6 @@ def bellman(mdp, state, action, values):
     return sum(prob * (mean(reward) + mdp.discount * values.get(new_state, 0))
             for prob, (new_state, reward) in mdp.transitions(state, action))
 
-
 def value_iteration(mdp, epsilon=1e-3, values=None):
     """ Solve MDP using value iteration
 

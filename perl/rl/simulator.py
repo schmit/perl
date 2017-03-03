@@ -1,12 +1,12 @@
 import math
 from statistics import mean, stdev
 import time
+from collections import defaultdict
 
 from .algorithms import FixedPolicy
-from ..mdp import policy_iteration
-from .environment import env_value
+from ..mdp import policy_iteration, value_iteration
+from .environment import env_value, mdp_to_env
 from ..util import sample, sars
-
 
 def episode(env, algo, verbose=False):
     """
@@ -70,17 +70,17 @@ def live(env, algo, num_episodes=1, verbose=None):
 
     return rewards
 
-def reward_path(env, algo, num_episodes, num_repeats=20,
+def reward_path(env, algo, num_episodes, log_every=20,
         num_test_episodes=1000, mdp=None, verbose=True):
     """
-    Run <live> for <num_repeats> times for <num_episodes> length,
+    Run <live> for <num_episodes> logging data every <log_every> episodes,
     and approximate the value of the current policy between calls to <live>.
 
     Args:
         - env: Environment
         - algo: Learning algorithm
-        - num_episodes: Number of episodes for each <live> call
-        - num_repeats: Number of calls to <live>
+        - num_episodes: Total number of episodes
+        - log_every: Number of calls for each <live> call
         - num_test_episodes: Number of episodes to test the current best policy
         - mdp (optional): if MDP is supplied, uses policy iteration to compute exact performance
         - verbose: Bool indicating output
@@ -91,13 +91,13 @@ def reward_path(env, algo, num_episodes, num_repeats=20,
           mean_test_reward, sd_test_reward)]
     """
     path = []
-    total_episodes = 0
+    total_episodes = 0 ; num_rounds = int(num_episodes / log_every)
 
     t_start = time.time()
-    for repeat in range(num_repeats):
+    for repeat in range(num_rounds):
         # learn
-        total_episodes += num_episodes
-        learning_rewards = live(env, algo, num_episodes)
+        total_episodes += log_every
+        learning_rewards = live(env, algo, log_every)
 
         # test
         current_policy = algo.optimal_policy
@@ -105,7 +105,7 @@ def reward_path(env, algo, num_episodes, num_repeats=20,
             testing_rewards = live(env, FixedPolicy(current_policy), num_test_episodes)
             performance = (total_episodes,
                         mean(learning_rewards),
-                        stdev(learning_rewards) / math.sqrt(num_episodes),
+                        stdev(learning_rewards) / math.sqrt(log_every),
                         mean(testing_rewards),
                         stdev(testing_rewards) / math.sqrt(num_test_episodes))
             path.append(performance)
@@ -113,14 +113,14 @@ def reward_path(env, algo, num_episodes, num_repeats=20,
             testing_rewards = env_value(env, policy_iteration(mdp, current_policy))
             performance = (total_episodes,
                         mean(learning_rewards),
-                        stdev(learning_rewards) / math.sqrt(num_episodes),
+                        stdev(learning_rewards) / math.sqrt(log_every),
                         testing_rewards)
             path.append(performance)
 
         # print
         if verbose:
             print("{:5d}/{:5d} done... ({:2.2f} | {:2.2f})".format(total_episodes,
-                num_episodes * num_repeats,
+                num_episodes,
                 performance[1],
                 performance[3]))
 
@@ -130,9 +130,50 @@ def reward_path(env, algo, num_episodes, num_repeats=20,
 
     return path
 
-
 def discounted_reward(history, discount):
     _, _, rewards, _ = zip(*sars(history))
     return sum(discount**i * reward for i, reward in enumerate(rewards))
+
+
+def comparison_sim(mdp, algo_list, algo_names, algo_params,
+                   num_sims=20, num_episodes=100, log_every=5, verbose=True):
+
+    t1 = time.time()
+    
+    results, times = defaultdict(list), defaultdict(list)
+    env = mdp_to_env(mdp)
+    
+    opt_val, opt_pol = value_iteration(mdp)
+    max_val = env_value(env, opt_val)
+    print("Max Value of the MDP is {}.".format(max_val))
+    
+    for sim in range(num_sims):
+        if verbose:
+            print("=========================================================")
+            print("Starting sim {} after {} seconds.".format(sim, time.time()-t1))
+            print("=========================================================")
+
+        for i in range(len(algo_list)):
+            algo = algo_list[i](**algo_params[i])
+            algo.name = algo_names[i]
+            t_start = time.time()
+            path = reward_path(env, algo, num_episodes, log_every, mdp=mdp, verbose=False)
+            results[algo.name].append(path)
+            times[algo.name].append(time.time()-t_start)
+            if verbose:
+                print("=====================================")
+                print("{} | Sim {} | Took {} s.".format(algo.name, sim, times[algo.name][-1]))
+                print("mean performance of best policy (episode, performance):")
+                print([(elt[0], elt[3]) for elt in path])
+
+    t2 = time.time()
+    print("=====================================")
+    print("=====================================")
+    print("Finished after {} seconds.".format(t2-t1))
+            
+    return results, times
+
+
+
 
 
