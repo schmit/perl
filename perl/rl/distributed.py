@@ -1,12 +1,14 @@
 import math
 from statistics import mean, stdev
 import time
+import random
 from collections import defaultdict
 import numpy as np
+import pickle
 
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 import multiprocessing
-from copy import deepcopy
+# from copy import deepcopy
 
 from pathos.pools import ProcessPool, ThreadPool
 
@@ -36,10 +38,10 @@ def run_distributed_sim(mdp, algo_list, algo_names, algo_params, num_sims, num_e
         arg_maps[i]["worker"] = i
 
     pool = ProcessPool(num_cores)
-    r_pool = pool.map(process_simulation, arg_maps)
+    results_list = pool.map(process_simulation, arg_maps)
 
-    results_list = Parallel(n_jobs=num_cores)(delayed(process_simulation)(i, by_parts, algo_list,
-        algo_names, algo_params, sims_core, num_episodes, log_every) for i in range(num_cores))
+    # results_list = Parallel(n_jobs=num_cores)(delayed(process_simulation)(i, by_parts, algo_list,
+    #    algo_names, algo_params, sims_core, num_episodes, log_every) for i in range(num_cores))
 
     results = defaultdict(list)
     for elt in results_list:
