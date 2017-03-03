@@ -16,7 +16,7 @@ def Triangle(max_depth=5, probs=[0.1, 0.2, 0.3, 0.4, 0.5]):
 
 
     """
-    reward_distributions = defaultdict(lambda: random.choice(probs))
+    reward_distributions = defaultdict(lambda: random.random())
 
     def initial_states():
         return [(1, State(0, 0))]
