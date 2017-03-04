@@ -6,16 +6,11 @@ from collections import defaultdict
 import numpy as np
 import pickle
 
-# from joblib import Parallel, delayed
 import multiprocessing
-# from copy import deepcopy
-
 from pathos.pools import ProcessPool, ThreadPool
 
-from .algorithms import FixedPolicy
-from ..mdp import policy_iteration, value_iteration
+from ..mdp import value_iteration
 from .environment import env_value, mdp_to_env
-from ..util import sample, sars
 from .simulator import comparison_sim
 
 def run_distributed_sim(mdp, algo_list, algo_names, algo_params, num_sims, num_episodes, log_every, num_cores):
@@ -25,14 +20,16 @@ def run_distributed_sim(mdp, algo_list, algo_names, algo_params, num_sims, num_e
     """
 
     num_cores = min(multiprocessing.cpu_count(), num_cores)
-    print("Using {} cores for parallel processing.".format(num_cores))
-
     sims_core = int(num_sims/num_cores)
+    print("Using {} cores for parallel processing | {} sims per core.".format(num_cores, sims_core))
+
+    opt_val, opt_pol = value_iteration(mdp)
+    max_val = env_value(mdp_to_env(mdp), opt_val)
 
     # mdp, algo_list, algo_names, algo_params, num_sims, num_episodes, log_every
 
     arg_base = {"mdp":mdp, "algo_list":algo_list, "algo_names":algo_names, "algo_params":algo_params,
-               "num_sims":num_sims, "num_episodes":num_episodes, "log_every":log_every}
+               "num_sims":sims_core, "num_episodes":num_episodes, "log_every":log_every}
     arg_maps = [{k:v for k,v in arg_base.items()} for i in range(num_cores)]
     for i in range(num_cores):
         arg_maps[i]["worker"] = i
@@ -40,13 +37,17 @@ def run_distributed_sim(mdp, algo_list, algo_names, algo_params, num_sims, num_e
     pool = ProcessPool(num_cores)
     results_list = pool.map(process_simulation, arg_maps)
 
-    # results_list = Parallel(n_jobs=num_cores)(delayed(process_simulation)(i, by_parts, algo_list,
-    #    algo_names, algo_params, sims_core, num_episodes, log_every) for i in range(num_cores))
-
     results = defaultdict(list)
     for elt in results_list:
         for key, val in elt.items():
-            results[key].append(val)
+            results[key] += val
+
+    results["algo_names"] = algo_names
+    results["num_sims"] = num_sims
+    results["num_episodes"] = num_episodes
+    results["max_val"] = max_val
+
+    print("Max Value of the MDP is {}.".format(max_val))
 
     return results
 
