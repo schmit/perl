@@ -143,9 +143,10 @@ def comparison_sim(mdp, algo_list, algo_names, algo_params,
     results, times = defaultdict(list), defaultdict(list)
     env = mdp_to_env(mdp)
     
-    opt_val, opt_pol = value_iteration(mdp)
-    max_val = env_value(env, opt_val)
-    print("Max Value of the MDP is {}.".format(max_val))
+    if verbose:
+        opt_val, opt_pol = value_iteration(mdp)
+        max_val = env_value(env, opt_val)
+        print("Max Value of the MDP is {}.".format(max_val))
     
     for sim in range(num_sims):
         if verbose:

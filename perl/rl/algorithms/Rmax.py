@@ -110,6 +110,12 @@ class Rmax(Algorithm):
                              self.env.initial_states(), self.discount)
         value, policy = value_iteration(mdp_opt, epsilon=1e-3, values=None)
         self.latest_values = value
+
+        # policy may be incomplete
+        for s in self.states:
+            if s not in policy:
+                policy[s] = random.choice(self.actions(s))
+
         return policy
 
     def __repr__(self):
