@@ -5,4 +5,5 @@ from .qlearning import Qlearning
 from .nvaluesampling import NValueSampling
 from .BOSS import BOSS
 from .Rmax import Rmax
+from .rBOSS import rBOSS
 
