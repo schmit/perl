@@ -69,8 +69,8 @@ def value_iteration(mdp, epsilon=1e-3, values=None):
             values = new_values
 
         iteration += 1
-        if iteration > 300:
-            print("Warning: value_iteration not converged after 300 iterations")
+        if iteration > 500:
+            print("Warning: value_iteration not converged after 500 iterations")
             return new_values, policy
 
 def policy_iteration(mdp, policy, epsilon=1e-3, values=None):
