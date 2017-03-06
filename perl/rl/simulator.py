@@ -91,7 +91,8 @@ def reward_path(env, algo, num_episodes, log_every=20,
           mean_test_reward, sd_test_reward)]
     """
     path = []
-    total_episodes = 0 ; num_rounds = int(num_episodes / log_every)
+    total_episodes = 0
+    num_rounds = int(num_episodes / log_every)
 
     t_start = time.time()
     for repeat in range(num_rounds):
@@ -139,15 +140,15 @@ def comparison_sim(mdp, algo_list, algo_names, algo_params,
                    num_sims=20, num_episodes=100, log_every=5, verbose=True):
 
     t1 = time.time()
-    
+
     results, times = defaultdict(list), defaultdict(list)
     env = mdp_to_env(mdp)
-    
+
     if verbose:
         opt_val, opt_pol = value_iteration(mdp)
         max_val = env_value(env, opt_val)
         print("Max Value of the MDP is {}.".format(max_val))
-    
+
     for sim in range(num_sims):
         if verbose:
             print("=========================================================")
@@ -171,7 +172,7 @@ def comparison_sim(mdp, algo_list, algo_names, algo_params,
     print("=====================================")
     print("=====================================")
     print("Finished after {} seconds.".format(t2-t1))
-            
+
     return results, times
 
 
