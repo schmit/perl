@@ -36,6 +36,8 @@ class Rmax(Algorithm):
 
         if type(self.states[0]) in [type(0), type(0.0)]:
             self.s_heaven = min(self.states) - 1
+        elif type(self.states[0]) == type((0,1)):
+            self.s_heaven = tuple(range(len(self.states[0])))
         elif hasattr(self.states[0], '_fields'):
             self.s_heaven = tuple([random.random() for _ in self.states[0]._fields])
         else:
