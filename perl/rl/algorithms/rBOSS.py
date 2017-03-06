@@ -51,7 +51,7 @@ class rBOSS(PosteriorSampling):
 	def learn(self, steps):
 		# update_posteriors(steps, self.posterior)
 		# self._updated_policy = False
-		super(BOSS, self).learn(steps)
+		super(rBOSS, self).learn(steps)
 		# steps are (state, action, reward, new_state) tuples
 		for s, a, r, s2 in steps:
 			self.visits_sa[(s,a)] += 1
