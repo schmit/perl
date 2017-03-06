@@ -1,6 +1,7 @@
 from collections import defaultdict
 import math
 import random
+from ...rl.environment import mdp_to_env
 from .core import Algorithm
 
 
@@ -30,10 +31,13 @@ class Qlearning(Algorithm):
     Currently learns using TD(0), using other TD learning methods is todo
     """
     def __init__(self,
-            env,
+            mdp,
             lr=lambda num_episodes: min(1, 1/num_episodes**0.5),
             discount=0.9,
             dithering=epsgreedy):
+
+        env = mdp_to_env(mdp)
+
         self.lr = lr
         self.discount = discount
         self.Q = defaultdict(lambda: defaultdict(lambda: 0))
