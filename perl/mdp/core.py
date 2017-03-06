@@ -37,7 +37,7 @@ def bellman(mdp, state, action, values):
             for prob, (new_state, reward) in mdp.transitions(state, action))
 
 
-def value_iteration(mdp, epsilon=1e-3, values=None):
+def value_iteration(mdp, epsilon=1e-5, values=None):
     """ Solve MDP using value iteration
 
     Args:
@@ -62,7 +62,7 @@ def value_iteration(mdp, epsilon=1e-3, values=None):
 
         # check for convergence
         diff = sum(abs(new_values[state] - values[state])
-                for state in new_values.keys())
+                for state in new_values.keys()) / len(values)
         if diff < epsilon:
             return new_values, policy
         else:
@@ -73,7 +73,7 @@ def value_iteration(mdp, epsilon=1e-3, values=None):
             print("Warning: value_iteration not converged after 1000 iterations")
             return new_values, policy
 
-def policy_iteration(mdp, policy, epsilon=1e-3, values=None):
+def policy_iteration(mdp, policy, epsilon=1e-5, values=None):
     """ Compute values of states when following <policy>
 
     Args:
@@ -88,6 +88,7 @@ def policy_iteration(mdp, policy, epsilon=1e-3, values=None):
     if values is None:
         values = {state: 0 for state in find_all_states(mdp)}
 
+    iteration = 0
     while True:
         new_values = {}
         # update all values
@@ -96,11 +97,16 @@ def policy_iteration(mdp, policy, epsilon=1e-3, values=None):
 
         # check for convergence
         diff = sum(abs(new_values[state] - values[state])
-                for state in new_values.keys())
+                for state in new_values.keys()) / len(values)
         if diff < epsilon:
             return new_values
         else:
             values = new_values
+
+        iteration += 1
+        if iteration > 1000:
+            print("Warning: policy_iteration not converged after 1000 iterations")
+            return new_values
 
 
 
