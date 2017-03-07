@@ -85,8 +85,11 @@ class TwoStepDecoupledPosteriorSampling(PosteriorSampling):
 
         self.latest_values = None
         self._updated_policy = False
+        self.episode_t = 0
 
     def init_episode(self, max_tries=10):
+
+        self.episode_t += 1
 
         # half the time, use the first policy
         if random.random() < 0.5:
@@ -125,7 +128,7 @@ class TwoStepDecoupledPosteriorSampling(PosteriorSampling):
             self.buffer.add(z)
 
         # if search failed
-        print("Search Failed. Computing Random Policy.")
+        print("Search Failed. Computing Random Policy. [episode {}]".format(self.episode_t))
         mdp = self.sampler()
         value, policy = value_iteration(mdp, epsilon=1e-3, values=self.latest_values)
         self.policy = policy
