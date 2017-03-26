@@ -114,6 +114,7 @@ class InfoMaxSampling(PosteriorSampling):
             values, policy = value_iteration(mdp2, epsilon=1e-3, values=self.latest_values)
             cross_v = env_value(self.env, policy_iteration(mdp, policy, values=values))
             cross_values.append(cross_v)
+            print("It's here IM.")
             entropy_est.append(np.var(cross_values, ddof=1))
 
             tries += 1
@@ -121,7 +122,6 @@ class InfoMaxSampling(PosteriorSampling):
                 break
 
         # print("Tries {} | entropy_est = {}.".format(tries, entropy_est[-1]))
-        print("It's here IM.")
         return entropy_est[-1], np.mean(cross_values)
 
     def update_posterior_after_sampling(self, posterior, policy_s, mdp_s, num_episodes=5):
