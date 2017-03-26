@@ -7,6 +7,7 @@ from perl.mdp.triangle import Triangle
 from perl.mdp.numberline import Numberline
 from perl.mdp.chain import Chain
 from perl.mdp.sequence import Sequence, is_unique, is_increasing, most_duplicates
+from perl.mdp.optimizer import Optimizer, f_sum, f_prod
 
 from perl.rl.algorithms import Qlearning, PosteriorSampling, TwoStepPosteriorSampling
 from perl.rl.algorithms import TwoStepDecoupledPosteriorSampling, MaxVarPosteriorSampling
@@ -32,10 +33,16 @@ elif mdp_number == 2:
 elif mdp_number == 3:
 	mdp = Blackjack()
 	mdp_name = "Blackjack"
+elif mdp_number == 4:
+    n = 14 ; discount=1 ; p_success=0.75 ; p_die=0.05 ; p_left=0.6 ; p_right=0.7
+    mdp = Numberline(n, discount, p_success, p_die, p_left, p_right)
+    mdp_name = "Numberline-n{}-ps{}-pd{}-pl{}-pr{}".format(n, p_success, p_die, p_left, p_right)
 else:
-	n = 8 ; discount=1 ; p_success=0.65 ; p_die=0.1 ; p_left=0.5 ; p_right=0.6
-	mdp = Numberline(n, discount, p_success, p_die, p_left, p_right)
-	mdp_name = "Numberline-n{}-ps{}-pd{}-pl{}-pr{}".format(n, p_success, p_die, p_left, p_right)
+    f = f_sum ; fname = "fsum"
+    xmin = -3 ; xmax = 5 ; ymin = 0 ; ymax = 0 ; p_random = 0.1 ; p_die=0.05 ; discount = 1
+    mdp = Optimizer(f, xmin, xmax, ymin, ymax, p_random, p_die, discount)
+    mdp_name = "Optimizer-f={}-xmin{}-xmax{}-ymin{}-ymax{}-prandom{}-pdie{}.".format(fname, xmin, xmax,
+                                                                                     ymin, ymax, p_random, p_die)
 
 
 QL = Qlearning ; PS = PosteriorSampling ; sTSPS = TwoStepPosteriorSampling

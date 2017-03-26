@@ -1,10 +1,12 @@
 from collections import namedtuple
 import random
+import numpy as np
 
 from ...priors import NormalPrior, DirichletPrior
 from ...mdp import MDP, value_iteration, find_all_states
-from ...rl.environment import mdp_to_env
+from ...rl.environment import mdp_to_env, env_value
 from .core import Algorithm
+from ...mdp import policy_iteration, value_iteration
 
 Posterior = namedtuple("Posterior", "transitions rewards indexer")
 Indexer = namedtuple("Indexer", "from_index to_index")
@@ -132,6 +134,31 @@ def update_posteriors(steps, posterior):
         posterior.rewards[(state, action)].update(reward)
 
 
+def compute_entropy(env, posterior, eps=0.03, max_tries=150):
+    # compute the entropy of V(mdp, pol), mdp and pol are indep samples from posterior
+    # adaptively stops when its approx of the variance seems good enough
+    # we ASSUME every cross_v is gaussian with mean mu, and var sigma2.
+    # want to estimate sigma2 (entropy is only a function of sigma2).
+
+    entropy_est = [] ; cross_values = [] ; tries = 0 ; latest_values = None
+    while len(cross_values) < 5 or np.abs(entropy_est[-1] - entropy_est[-2])/entropy_est[-1] > eps:
+        # 2*(entropy_est**4)/(len(cross_values)-1) > eps
+        mdp = sample_mdp(env, posterior, env.discount)
+        mdp2 = sample_mdp(env, posterior, env.discount)
+        values, policy = value_iteration(mdp2, epsilon=1e-3, values=latest_values)
+        latest_values = values
+        cross_v = env_value(env, policy_iteration(mdp, policy, values=latest_values))
+        cross_values.append(cross_v)
+        entropy_est.append(np.var(cross_values, ddof=1))
+
+        tries += 1
+        if tries == max_tries:
+            break
+
+    # print("Tries {} | entropy_est = {}.".format(tries, entropy_est[-1]))
+
+    return entropy_est[-1], np.mean(cross_values)
+
 class PosteriorSampling(Algorithm):
     def __init__(self,
             mdp,
@@ -146,9 +173,14 @@ class PosteriorSampling(Algorithm):
 
         self._updated_policy = False
 
+        self.seen_episodes = 0
+
     def init_episode(self):
+        # v1, v2 = compute_entropy(self.env, self.posterior, eps=0.005)
+        # print("{} | PS Entropy = {} | Mean Val = {}.".format(self.seen_episodes, v1, v2))
         values, policy = value_iteration(self.sampler(), epsilon=1e-3)
         self.policy = policy
+        self.seen_episodes += 1
 
     def act(self, state):
         return self.policy[state]

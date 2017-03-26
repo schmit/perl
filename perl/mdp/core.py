@@ -109,4 +109,41 @@ def policy_iteration(mdp, policy, epsilon=1e-5, values=None):
             return new_values
 
 
+def imp_value_iteration(mdp, epsilon=1e-5, values=None):
+    """ Solve MDP using improved value iteration
 
+    Args:
+        mdp: MDP instance
+        epsilon (default: 1e-5): desired accuracy
+        values (default: None): optional initial values
+
+    Returns:
+        values, policy: dictionaries with state->value and state->action
+    """
+
+    if values is None:
+        values = {state: 0 for state in find_all_states(mdp)}
+
+    iteration = 0
+    while True:
+        policy = {}
+        new_values = {}
+        # update all values
+        for state, value in values.items():
+            new_values[state], policy[state] = max((bellman(mdp, state, action, values), action)
+                    for action in mdp.actions(state))
+
+        # check for convergence
+        diff_vals = [new_values[state] - values[state] for state in new_values.keys()]
+        discount_ratio = mdp.discount / (1 - mdp.discount)
+        c_low = discount_ratio * min(diff_vals) ; c_high = discount_ratio * max(diff_vals)
+
+        if c_high - c_low < epsilon:
+            return new_values, policy
+        else:
+            values = new_values
+
+        iteration += 1
+        if iteration > 500:
+            print("Warning: value_iteration not converged after 500 iterations")
+            return new_values, policy

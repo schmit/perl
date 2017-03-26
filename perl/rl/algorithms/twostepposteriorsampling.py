@@ -188,3 +188,52 @@ class MaxVarPosteriorSampling(PosteriorSampling):
     def __repr__(self):
         return "VarMax Posterior Sampling"
 
+
+class MinVarPosteriorSampling(PosteriorSampling):
+    def __init__(self,
+            mdp,
+            p_reward=lambda: NormalPrior(0, 1, 1),
+            discount=0.95,
+            q=4.0,
+            k=10):
+
+        self.env = mdp_to_env(mdp)
+        self.sampler, self.posterior = create_sampler(
+                mdp,
+                self.env,
+                p_reward,
+                discount)
+
+        self.num_policies = q
+        self.num_mdps = k
+
+        self.latest_values = None
+        self._updated_policy = False
+        self._training_logs = []
+
+    def init_episode(self):
+
+        policy_set = []
+        for i in range(self.num_policies):
+            mdp = self.sampler()
+            value, policy = value_iteration(mdp, epsilon=1e-3, values=self.latest_values)
+            self.latest_values = value
+            policy_set.append(policy)
+
+        mdp_set = [self.sampler() for _ in range(self.num_mdps)]
+
+        pol_std = [] 
+        for pol in policy_set:
+            pol_vals = [env_value(self.env, policy_iteration(mdp, pol)) for mdp in mdp_set]
+            pol_std.append(np.std(pol_vals))
+
+        p_star = np.argmin(pol_std)
+        self._training_logs.append(pol_std)
+
+        self.policy = policy_set[p_star]
+        return None
+
+
+    def __repr__(self):
+        return "VarMin Posterior Sampling"
+
