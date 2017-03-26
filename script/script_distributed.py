@@ -24,9 +24,9 @@ from collections import defaultdict
 
 from perl.rl.distributed import run_distributed_sim, save_obj
 
-num_cores = 1
+num_cores = 45
 
-mdp_number = 6 ; num_sims = num_cores * 1 ; num_episodes = 60 ; log_every = 3
+mdp_number = 6 ; num_sims = num_cores * 4 ; num_episodes = 60 ; log_every = 3
 
 if mdp_number == 0:
     max_depth = 15 ; mdp = Triangle(max_depth, probs=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
@@ -119,7 +119,7 @@ else:
              (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
              (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b}, "rBOSS(K{},B{})".format(boss_k, boss_b))]
 
-algos_to_include = [9]
+algos_to_include = [1, 2, 9, 10]
 
 algo_list = [elm[1] for elm in algos if elm[0] in algos_to_include]
 algo_params = [elm[2] for elm in algos if elm[0] in algos_to_include]

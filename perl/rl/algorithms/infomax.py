@@ -42,7 +42,7 @@ class InfoMaxSampling(PosteriorSampling):
         # v1, v2 = self.compute_entropy(self.posterior, eps=0.005)
         # print("{} | IM Entropy = {} | Mean Val = {}.".format(self.seen_episodes, v1, v2))
 
-        if np.random.random() < 0.5:
+        if np.random.random() < 0.25:
             values, policy = value_iteration(self.sampler(), epsilon=1e-3)
             self.policy = policy
             self.seen_episodes += 1
