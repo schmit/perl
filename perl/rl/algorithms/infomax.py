@@ -52,7 +52,7 @@ class InfoMaxSampling(PosteriorSampling):
         policy_set = []
         for i in range(self.num_policies):
             mdp = self.sampler()
-            value, policy = imp_value_iteration(mdp, epsilon=1e-3, values=self.latest_values)
+            value, policy = value_iteration(mdp, epsilon=1e-3, values=self.latest_values)
             self.latest_values = value
             policy_set.append(policy)
 

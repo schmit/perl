@@ -6,8 +6,6 @@ import numpy as np
 import math
 import random
 
-
-
 class NormalPrior:
     def __init__(self, mu0, sigma0, sigma):
         self.mu0 = mu0
