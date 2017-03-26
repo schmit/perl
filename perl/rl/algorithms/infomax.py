@@ -121,7 +121,6 @@ class InfoMaxSampling(PosteriorSampling):
                 break
 
         # print("Tries {} | entropy_est = {}.".format(tries, entropy_est[-1]))
-        print("It is here.")
         return entropy_est[-1], np.mean(cross_values)
 
     def update_posterior_after_sampling(self, posterior, policy_s, mdp_s, num_episodes=5):
