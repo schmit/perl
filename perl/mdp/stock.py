@@ -22,8 +22,11 @@ def Stock(M, D, P, S=100, T=10, price_set=[1,2,3,4,5]):
     def actions(state):
         return range(len(price_set))
 
-    @lru_cache(maxsize=None)
+    # @lru_cache(maxsize=None)
     def transitions(state, action):
+        if tuple((state, action)) in transitions.memory:
+            return transitions.memory[tuple((state, action))]
+
         trans = []
         m_state, day, stock = state
         num_m, num_c = D.shape
@@ -39,7 +42,11 @@ def Stock(M, D, P, S=100, T=10, price_set=[1,2,3,4,5]):
                         trans.append((p_nm * p_ci * p_wi, (None, rew)))
                     else:
                         trans.append((p_nm * p_ci * p_wi, ((new_market, day+1, stock-min(w_i, stock)), rew)))
+
+        transitions.memory[tuple((state, action))] = trans
         return trans
+
+    transitions.memory = {}
 
     return MDP(initial_states, actions, transitions, 1)
 
