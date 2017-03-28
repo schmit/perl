@@ -13,7 +13,7 @@ from perl.mdp.sequence import Sequence, is_unique, is_increasing, most_duplicate
 from perl.mdp.optimizer import Optimizer, f_sum, f_prod
 from perl.mdp.normal_triangle import NormalTriangle
 from perl.mdp.infostore import InfoStore
-from perl.mdp.stock import Stock
+from perl.mdp.stockprecomp import StockPreComp
 
 from perl.rl.algorithms import Qlearning, PosteriorSampling, TwoStepPosteriorSampling
 from perl.rl.algorithms import TwoStepDecoupledPosteriorSampling, MaxVarPosteriorSampling, MinVarPosteriorSampling
@@ -90,7 +90,7 @@ else:
     P = np.array([[0.7, 0.6, 0.4, 0.2, 0.1],
                  [0.7, 0.6, 0.4, 0.3, 0.2],
                  [0.85, 0.5, 0.45, 0.25, 0.25]])
-    mdp = Stock(M, D, P, S, T, price_set)
+    mdp = StockPreComp(M, D, P, S, T, price_set)
     mdp_name = "Stock-S{}-T{}".format(S, T)
     binary_reward = 0
 
