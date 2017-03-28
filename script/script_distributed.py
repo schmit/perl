@@ -34,8 +34,8 @@ if mdp_number == 0:
     mdp_name = "Triangle-{}".format(max_depth)
     binary_reward = 1
 elif mdp_number == 1:
-    n = 7 ; final_rew = 0.7 ; exploit_rew = 0.05 ; exit_prob=0.1
-    mdp = Chain(n, final_rew, exploit_rew, exit_prob)
+    n = 7 ; final_rew = 0.7 ; exploit_rew = 0.05 ; exit_prob=0.1 ; slip_prob = 0.05
+    mdp = Chain(n, final_rew, exploit_rew, exit_prob, slip_prob)
     mdp_name = "Chain-n={}".format(n)
     binary_reward = 0
 elif mdp_number == 2:

@@ -4,7 +4,7 @@ from ..distributions import Bernoulli
 from collections import namedtuple, defaultdict
 import random
 
-def Chain(n=5, final_rew=10, exploit_rew=2, exit_prob=0.1):
+def Chain(n=5, final_rew=10, exploit_rew=2, exit_prob=0.1, slip_prob=0.2):
     """
     Chain MDP (Strens, 2000; Poupart et al., 2006).
     The agent has two actions: Action 1 advances the agent along the chain,
@@ -12,6 +12,7 @@ def Chain(n=5, final_rew=10, exploit_rew=2, exit_prob=0.1):
     the last node <n>, leaves the agent where it is and gives a reward of
     <final_rew>; all other rewards are 0.
     Action 2 always has a reward of <exploit_rew>.
+    With prob <slip_prob> the opposite action as that taken by the user is executed.
     """
 
     def initial_states():
@@ -35,7 +36,8 @@ def Chain(n=5, final_rew=10, exploit_rew=2, exit_prob=0.1):
 
     def transitions(state, action):
         assert action in [1, 2]
-        return [(1-exit_prob, next_state_reward(state, action)),
+        return [(1-exit_prob-slip_prob, next_state_reward(state, action)),
+                (slip_prob, next_state_reward(state, 1 if action == 2 else 2)),
                 (exit_prob, (None, 0))]
 
     return MDP(initial_states, actions, transitions, 1)
