@@ -13,6 +13,7 @@ from perl.mdp.sequence import Sequence, is_unique, is_increasing, most_duplicate
 from perl.mdp.optimizer import Optimizer, f_sum, f_prod
 from perl.mdp.normal_triangle import NormalTriangle
 from perl.mdp.infostore import InfoStore
+from perl.mdp.stock import Stock
 
 from perl.rl.algorithms import Qlearning, PosteriorSampling, TwoStepPosteriorSampling
 from perl.rl.algorithms import TwoStepDecoupledPosteriorSampling, MaxVarPosteriorSampling, MinVarPosteriorSampling
@@ -26,10 +27,10 @@ from perl.rl.distributed import run_distributed_sim, save_obj
 
 num_cores = 45
 
-mdp_number = 6 ; num_sims = num_cores * 4 ; num_episodes = 60 ; log_every = 3
+mdp_number = 10 ; num_sims = num_cores * 4 ; num_episodes = 60 ; log_every = 3
 
 if mdp_number == 0:
-    max_depth = 15 ; mdp = Triangle(max_depth, probs=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
+    max_depth = 20 ; mdp = Triangle(max_depth, probs=[0.4 + 0.01*i for i in range(21)])
     mdp_name = "Triangle-{}".format(max_depth)
     binary_reward = 1
 elif mdp_number == 1:
@@ -60,23 +61,38 @@ elif mdp_number == 5:
                                                                                      ymin, ymax, p_random, p_die)
     binary_reward = 0
 elif mdp_number == 6:
-    max_depth = 15 ; means=[0.5, 1, 1.25, 1.5, 1.75, 2, 2.5, 3] ; sigma2=1
+    max_depth = 5 ; means=[0.5, 1, 1.25, 1.5, 1.75, 2, 3] ; sigma2=1
     mdp = NormalTriangle(max_depth, means, sigma2)
     mdp_name = "Normal-Triangle-{}-means-{}".format(max_depth, means)
     binary_reward = 0
 elif mdp_number == 7:
-    max_depth = 12 ; means=[0.5, 1, 1.25, 1.5, 1.75, 2, 3] ; sigma2=1
+    max_depth = 5 ; means=[0.5, 1, 1.25, 1.5, 1.75, 2, 3] ; sigma2=1
     mdp_b = NormalTriangle(max_depth, means, sigma2)
     mdp_name_b = "Normal-Triangle-{}-means-{}".format(max_depth, means)
     c = 1 ; sigma2 = 1
     mdp = InfoStore(mdp_b, c, sigma2)
     mdp_name = "InfoStore-c={}-s2={}-b={}".format(c, sigma2, mdp_name_b)
     binary_reward = 0
-else:
+elif mdp_number == 8:
     n = 5 ; m = 3 ; p_c = 0.05 ; p_die = 0.1 ; discount = 1
     mdp = Retention(n, m, p_c, p_die, discount)
     mdp_name = "Retention-n{}-m{}-pc{}-pd{}".format(n, m, p_c, p_die)    
     binary_reward = 1
+else:
+    # M = market transition matrix.
+    # D = market_state x num_incoming_cust probability matrix.
+    # P = market_state x prices = prob of buying in the market state at price p
+    price_set = [1, 2, 3, 4, 5] ; S=12 ; T=5
+    M = np.array([[0.8, 0.15, 0.05], [0.1, 0.8, 0.1], [0.05, 0.15, 0.80]]) # market transition
+    D = np.array([[0.3, 0.2, 0.15, 0.15, 0.1, 0.075, 0.025, 0],   # max num cust = 7
+                  [0.1, 0.20, 0.25, 0.15, 0.15, 0.05, 0.05, 0.05],
+                  [0.05, 0.15, 0.30, 0.10, 0.20, 0.075, 0.075, 0.05]])
+    P = np.array([[0.7, 0.6, 0.4, 0.2, 0.1],
+                 [0.7, 0.6, 0.4, 0.3, 0.2],
+                 [0.85, 0.5, 0.45, 0.25, 0.25]])
+    mdp = Stock(M, D, P, S, T, price_set)
+    mdp_name = "Stock-S{}-T{}".format(S, T)
+    binary_reward = 0
 
 QL = Qlearning ; PS = PosteriorSampling ; sTSPS = TwoStepPosteriorSampling
 rTSPS = TwoStepDecoupledPosteriorSampling ; BS = BOSS ;
@@ -92,9 +108,10 @@ varmax_k = 16
 varmin_q = 4
 varmin_k = 16
 
-infomax_q = 20    # num policies
-infomax_k = 20    # num mdps
+infomax_q = 15    # num policies
+infomax_k = 15    # num mdps
 infomax_episdata = 5
+infomax_ps_prob = 0.25   # do PS with prob
 
 if binary_reward:
     algos = [(1, QL, {"mdp":mdp}, "QLearning"),
@@ -105,7 +122,7 @@ if binary_reward:
              (6, rmax, {"mdp":mdp, "rmax_v":rmax_v, "K":rmax_k}, "Rmax({},K{})".format(rmax_v, rmax_k)), 
              (7, maxVar, {"mdp":mdp, "k":varmax_k, "q":varmax_q, "p_reward":lambda: BetaPrior(1, 1)}, "VarMax(q{},k{})".format(varmax_q, varmax_k)),
              (8, minVar, {"mdp":mdp, "k":varmin_q, "q":varmin_k, "p_reward":lambda: BetaPrior(1, 1)}, "VarMin(q{},k{})".format(varmin_q, varmin_k)),
-             (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
+             (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "ps_prob":infomax_ps_prob}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
              (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b, "p_reward":lambda: BetaPrior(1, 1)}, "rBOSS(K{},B{})".format(boss_k, boss_b))]
 else:
     algos = [(1, QL, {"mdp":mdp}, "QLearning"),
@@ -116,10 +133,10 @@ else:
              (6, rmax, {"mdp":mdp, "rmax_v":rmax_v, "K":rmax_k}, "Rmax({},K{})".format(rmax_v, rmax_k)), 
              (7, maxVar, {"mdp":mdp, "k":varmax_k, "q":varmax_q}, "VarMax(q{},k{})".format(varmax_q, varmax_k)),
              (8, minVar, {"mdp":mdp, "k":varmin_q, "q":varmin_k}, "VarMin(q{},k{})".format(varmin_q, varmin_k)),
-             (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
+             (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "ps_prob":infomax_ps_prob}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
              (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b}, "rBOSS(K{},B{})".format(boss_k, boss_b))]
 
-algos_to_include = [1, 2, 9, 10]
+algos_to_include = [1, 2, 10]
 
 algo_list = [elm[1] for elm in algos if elm[0] in algos_to_include]
 algo_params = [elm[2] for elm in algos if elm[0] in algos_to_include]

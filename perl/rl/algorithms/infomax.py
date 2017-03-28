@@ -18,6 +18,7 @@ class InfoMaxSampling(PosteriorSampling):
             discount=0.95,
             q=4.0,
             k=10,
+            ps_prob=0.25,
             num_epis_data=5):
 
         self.env = mdp_to_env(mdp)
@@ -30,6 +31,7 @@ class InfoMaxSampling(PosteriorSampling):
         self.num_policies = q
         self.num_mdps = k
         self.num_epis_data = num_epis_data
+        self.ps_prob = ps_prob
 
         self.latest_values = None
         self._updated_policy = False
@@ -42,7 +44,7 @@ class InfoMaxSampling(PosteriorSampling):
         # v1, v2 = self.compute_entropy(self.posterior, eps=0.005)
         # print("{} | IM Entropy = {} | Mean Val = {}.".format(self.seen_episodes, v1, v2))
 
-        if np.random.random() < 0.25:
+        if np.random.random() < self.ps_prob:
             values, policy = value_iteration(self.sampler(), epsilon=1e-3)
             self.policy = policy
             self.seen_episodes += 1
@@ -59,10 +61,6 @@ class InfoMaxSampling(PosteriorSampling):
         # mdp's to generate data
         mdp_set = [self.sampler() for _ in range(self.num_mdps)]
 
-        # print("IN: ")
-        # for key_i, val_i in self.posterior.transitions.items():
-        #     print(key_i, val_i)
-
         p_infogain = [] 
         for pol in policy_set:
             entropy_pol = 0
@@ -78,13 +76,6 @@ class InfoMaxSampling(PosteriorSampling):
 
         p_star = np.argmin(p_infogain)
         self._training_logs.append(p_infogain)
-
-        # print("{} | Info Gain: {}.".format(self.seen_episodes, p_infogain))
-        # print("Selected Policy: {}.".format(p_star))
-
-        # print("OUT:")
-        # for key_i, val_i in self.posterior.transitions.items():
-        #     print(key_i, val_i)
 
         self.policy = policy_set[p_star]
         self.seen_episodes += 1

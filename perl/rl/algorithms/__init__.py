@@ -8,3 +8,4 @@ from .BOSS import BOSS
 from .Rmax import Rmax
 from .rBOSS import rBOSS
 from .infomax import InfoMaxSampling
+from .BAMCP import BAMCP
