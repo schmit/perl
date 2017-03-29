@@ -171,7 +171,7 @@ def comparison_sim(mdp, algo_list, algo_names, algo_params,
     t2 = time.time()
     print("=====================================")
     print("=====================================")
-    print("Finished after {} seconds.".format(t2-t1))
+    print("{} | Finished after {} seconds.".format(verbose, t2-t1))
 
     return results, times
 
