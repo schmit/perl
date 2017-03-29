@@ -40,7 +40,7 @@ def Chain(n=5, final_rew=10, exploit_rew=2, exit_prob=0.1, slip_prob=0.2):
                 (slip_prob, next_state_reward(state, 1 if action == 2 else 2)),
                 (exit_prob, (None, 0))]
 
-    return MDP(initial_states, actions, transitions, 1)
+    return MDP(initial_states, actions, transitions, 0.95)
 
 
 

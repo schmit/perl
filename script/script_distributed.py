@@ -27,14 +27,14 @@ from perl.rl.distributed import run_distributed_sim, save_obj
 
 num_cores = 45
 
-mdp_number = 10 ; num_sims = num_cores * 4 ; num_episodes = 60 ; log_every = 3
+mdp_number = 1 ; num_sims = num_cores * 4 ; num_episodes = 100 ; log_every = 4
 
 if mdp_number == 0:
     max_depth = 20 ; mdp = Triangle(max_depth, probs=[0.4 + 0.01*i for i in range(21)])
     mdp_name = "Triangle-{}".format(max_depth)
     binary_reward = 1
 elif mdp_number == 1:
-    n = 7 ; final_rew = 0.7 ; exploit_rew = 0.05 ; exit_prob=0.1 ; slip_prob = 0.05
+    n = 7 ; final_rew = 14 ; exploit_rew = 1 ; exit_prob=0.1 ; slip_prob = 0.05
     mdp = Chain(n, final_rew, exploit_rew, exit_prob, slip_prob)
     mdp_name = "Chain-n={}".format(n)
     binary_reward = 0
@@ -108,10 +108,10 @@ varmax_k = 16
 varmin_q = 4
 varmin_k = 16
 
-infomax_q = 15    # num policies
-infomax_k = 15    # num mdps
+infomax_q = 8     # num policies
+infomax_k = 10    # num mdps
 infomax_episdata = 5
-infomax_ps_prob = 0.25   # do PS with prob
+infomax_total_budget = num_episodes / 2 # do PS with prob
 
 if binary_reward:
     algos = [(1, QL, {"mdp":mdp}, "QLearning"),
@@ -122,7 +122,7 @@ if binary_reward:
              (6, rmax, {"mdp":mdp, "rmax_v":rmax_v, "K":rmax_k}, "Rmax({},K{})".format(rmax_v, rmax_k)), 
              (7, maxVar, {"mdp":mdp, "k":varmax_k, "q":varmax_q, "p_reward":lambda: BetaPrior(1, 1)}, "VarMax(q{},k{})".format(varmax_q, varmax_k)),
              (8, minVar, {"mdp":mdp, "k":varmin_q, "q":varmin_k, "p_reward":lambda: BetaPrior(1, 1)}, "VarMin(q{},k{})".format(varmin_q, varmin_k)),
-             (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "ps_prob":infomax_ps_prob}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
+             (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
              (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b, "p_reward":lambda: BetaPrior(1, 1)}, "rBOSS(K{},B{})".format(boss_k, boss_b))]
 else:
     algos = [(1, QL, {"mdp":mdp}, "QLearning"),
@@ -133,10 +133,10 @@ else:
              (6, rmax, {"mdp":mdp, "rmax_v":rmax_v, "K":rmax_k}, "Rmax({},K{})".format(rmax_v, rmax_k)), 
              (7, maxVar, {"mdp":mdp, "k":varmax_k, "q":varmax_q}, "VarMax(q{},k{})".format(varmax_q, varmax_k)),
              (8, minVar, {"mdp":mdp, "k":varmin_q, "q":varmin_k}, "VarMin(q{},k{})".format(varmin_q, varmin_k)),
-             (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "ps_prob":infomax_ps_prob}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
+             (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
              (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b}, "rBOSS(K{},B{})".format(boss_k, boss_b))]
 
-algos_to_include = [1, 2, 10]
+algos_to_include = [1, 2, 9, 10]
 
 algo_list = [elm[1] for elm in algos if elm[0] in algos_to_include]
 algo_params = [elm[2] for elm in algos if elm[0] in algos_to_include]

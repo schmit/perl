@@ -18,8 +18,9 @@ class InfoMaxSampling(PosteriorSampling):
             discount=0.95,
             q=4.0,
             k=10,
-            ps_prob=0.25,
-            num_epis_data=5):
+            total_budget=100,
+            num_epis_data=5,
+            verbose=False):
 
         self.env = mdp_to_env(mdp)
         self.sampler, self.posterior = create_sampler(
@@ -31,7 +32,9 @@ class InfoMaxSampling(PosteriorSampling):
         self.num_policies = q
         self.num_mdps = k
         self.num_epis_data = num_epis_data
-        self.ps_prob = ps_prob
+        self.total_budget = total_budget
+
+        self.verbose = verbose
 
         self.latest_values = None
         self._updated_policy = False
@@ -44,8 +47,8 @@ class InfoMaxSampling(PosteriorSampling):
         # v1, v2 = self.compute_entropy(self.posterior, eps=0.005)
         # print("{} | IM Entropy = {} | Mean Val = {}.".format(self.seen_episodes, v1, v2))
 
-        if np.random.random() < self.ps_prob:
-            values, policy = value_iteration(self.sampler(), epsilon=1e-3)
+        if np.random.random() < self.seen_episodes / self.total_budget:
+            values, policy = imp_value_iteration(self.sampler(), epsilon=1e-3)
             self.policy = policy
             self.seen_episodes += 1
             return
@@ -54,7 +57,7 @@ class InfoMaxSampling(PosteriorSampling):
         policy_set = []
         for i in range(self.num_policies):
             mdp = self.sampler()
-            value, policy = value_iteration(mdp, epsilon=1e-3, values=self.latest_values)
+            value, policy = imp_value_iteration(mdp, epsilon=1e-3) # , values=self.latest_values)
             self.latest_values = value
             policy_set.append(policy)
 
@@ -62,9 +65,9 @@ class InfoMaxSampling(PosteriorSampling):
         mdp_set = [self.sampler() for _ in range(self.num_mdps)]
 
         p_infogain = [] 
-        for pol in policy_set:
+        for i, pol in enumerate(policy_set):
             entropy_pol = 0
-            for m in mdp_set:
+            for j, m in enumerate(mdp_set):
                 posterior_v = self.copy_posterior(self.posterior)
                 # generate data using (m, pol) and update posterior
                 posterior_v = self.update_posterior_after_sampling(posterior_v, pol, m, self.num_epis_data)
@@ -76,6 +79,10 @@ class InfoMaxSampling(PosteriorSampling):
 
         p_star = np.argmin(p_infogain)
         self._training_logs.append(p_infogain)
+
+        if self.verbose:
+            print("{} | InfoGains: {}".format(self.seen_episodes, p_infogain))
+            print("Policy: {}".format(policy_set[p_star]))
 
         self.policy = policy_set[p_star]
         self.seen_episodes += 1
@@ -102,7 +109,7 @@ class InfoMaxSampling(PosteriorSampling):
             # 2*(entropy_est**4)/(len(cross_values)-1) > eps
             mdp = sample_mdp(self.env, mdp_posterior, self.env.discount)
             mdp2 = sample_mdp(self.env, mdp_posterior, self.env.discount)
-            values, policy = value_iteration(mdp2, epsilon=1e-3, values=self.latest_values)
+            values, policy = imp_value_iteration(mdp2, epsilon=1e-3, values=self.latest_values)
             cross_v = env_value(self.env, policy_iteration(mdp, policy, values=values))
             cross_values.append(cross_v)
             if len(cross_values) > 1:
