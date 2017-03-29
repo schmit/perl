@@ -32,7 +32,7 @@ def NormalTriangle(max_depth=5, means=[1, 1.25, 1.5, 1.75, 2], sigma2=[1]):
         assert action in [-1, 1]
         return [(1, next_state_reward(state, action))]
 
-    return MDP(initial_states, actions, transitions, 1)
+    return MDP(initial_states, actions, transitions, 0.98)
 
 
 
