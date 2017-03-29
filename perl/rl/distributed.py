@@ -70,7 +70,7 @@ def process_simulation(arg_dict):
     random.seed(worker * int(5 * time.time() % 100000))
 
     results, times = comparison_sim(mdp, algo_list, algo_names, algo_params,
-                    num_sims=num_sims, num_episodes=num_episodes, log_every=log_every, verbose=False)
+                    num_sims=num_sims, num_episodes=num_episodes, log_every=log_every, verbose=worker)
 
     return results
 

@@ -137,7 +137,7 @@ def discounted_reward(history, discount):
 
 
 def comparison_sim(mdp, algo_list, algo_names, algo_params,
-                   num_sims=20, num_episodes=100, log_every=5, verbose=True):
+                   num_sims=20, num_episodes=100, log_every=5, verbose=0):
 
     t1 = time.time()
 
@@ -151,9 +151,9 @@ def comparison_sim(mdp, algo_list, algo_names, algo_params,
 
     for sim in range(num_sims):
         if verbose:
-            print("=========================================================")
-            print("Starting sim {} after {} seconds.".format(sim, time.time()-t1))
-            print("=========================================================")
+            # print("=========================================================")
+            print("{} | Starting sim {}/{} after {} seconds.".format(verbose, sim, num_sims, time.time()-t1))
+            # print("=========================================================")
 
         for i in range(len(algo_list)):
             algo = algo_list[i](**algo_params[i])
@@ -162,11 +162,11 @@ def comparison_sim(mdp, algo_list, algo_names, algo_params,
             path = reward_path(env, algo, num_episodes, log_every, mdp=mdp, verbose=False)
             results[algo.name].append(path)
             times[algo.name].append(time.time()-t_start)
-            if verbose:
-                print("=====================================")
-                print("{} | Sim {} | Took {} s.".format(algo.name, sim, times[algo.name][-1]))
-                print("mean performance of best policy (episode, performance):")
-                print([(elt[0], elt[3]) for elt in path])
+            # if verbose:
+            #     print("=====================================")
+            #     print("{} | Sim {} | Took {} s.".format(algo.name, sim, times[algo.name][-1]))
+            #     print("mean performance of best policy (episode, performance):")
+            #     print([(elt[0], elt[3]) for elt in path])
 
     t2 = time.time()
     print("=====================================")
