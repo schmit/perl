@@ -156,7 +156,6 @@ def compute_entropy(env, posterior, eps=0.03, max_tries=150):
             break
 
     # print("Tries {} | entropy_est = {}.".format(tries, entropy_est[-1]))
-    print("It's here PS.")
     return entropy_est[-1], np.mean(cross_values)
 
 class PosteriorSampling(Algorithm):

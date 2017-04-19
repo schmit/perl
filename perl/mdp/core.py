@@ -111,16 +111,13 @@ def policy_iteration(mdp, policy, epsilon=1e-5, values=None):
 
 def imp_value_iteration(mdp, epsilon=1e-5, values=None):
     """ Solve MDP using improved value iteration
-
     Args:
         mdp: MDP instance
         epsilon (default: 1e-5): desired accuracy
         values (default: None): optional initial values
-
     Returns:
         values, policy: dictionaries with state->value and state->action
     """
-
     if values is None:
         values = {state: 0 for state in find_all_states(mdp)}
 
@@ -145,5 +142,5 @@ def imp_value_iteration(mdp, epsilon=1e-5, values=None):
 
         iteration += 1
         if iteration > 500:
-            print("Warning: value_iteration not converged after 500 iterations")
+            print("Warning: imp_value_iteration not converged after 500 iterations")
             return new_values, policy
