@@ -17,7 +17,7 @@ from perl.mdp.stockprecomp import StockPreComp
 
 from perl.rl.algorithms import Qlearning, PosteriorSampling, TwoStepPosteriorSampling
 from perl.rl.algorithms import TwoStepDecoupledPosteriorSampling, MaxVarPosteriorSampling, MinVarPosteriorSampling
-from perl.rl.algorithms import BOSS, Rmax, rBOSS, InfoMaxSampling
+from perl.rl.algorithms import BOSS, Rmax, rBOSS, InfoMaxSampling, InfoImprovSampling
 from perl.rl.simulator import reward_path, comparison_sim
 
 from perl.priors import BetaPrior
@@ -108,10 +108,11 @@ varmax_k = 16
 varmin_q = 4
 varmin_k = 16
 
-infomax_q = 8     # num policies
-infomax_k = 10    # num mdps
+infomax_q = 8    # num policies
+infomax_k = 12    # num mdps
 infomax_episdata = 5
-infomax_total_budget = num_episodes / 2 # do PS with prob
+infomax_total_budget = num_episodes # do PS with prob
+infoimp_alpha = 1
 
 if binary_reward:
     algos = [(1, QL, {"mdp":mdp}, "QLearning"),
@@ -123,7 +124,8 @@ if binary_reward:
              (7, maxVar, {"mdp":mdp, "k":varmax_k, "q":varmax_q, "p_reward":lambda: BetaPrior(1, 1)}, "VarMax(q{},k{})".format(varmax_q, varmax_k)),
              (8, minVar, {"mdp":mdp, "k":varmin_q, "q":varmin_k, "p_reward":lambda: BetaPrior(1, 1)}, "VarMin(q{},k{})".format(varmin_q, varmin_k)),
              (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
-             (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b, "p_reward":lambda: BetaPrior(1, 1)}, "rBOSS(K{},B{})".format(boss_k, boss_b))]
+             (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b, "p_reward":lambda: BetaPrior(1, 1)}, "rBOSS(K{},B{})".format(boss_k, boss_b)),
+             (11, infoImp, {"mdp":mdp, "alpha":infoimp_alpha, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoImp(q{},k{},alpha{})".format(infomax_q, infomax_k, infoimp_alpha))]
 else:
     algos = [(1, QL, {"mdp":mdp}, "QLearning"),
              (2, PS, {"mdp":mdp}, "PosteriorSampling"),
@@ -134,9 +136,10 @@ else:
              (7, maxVar, {"mdp":mdp, "k":varmax_k, "q":varmax_q}, "VarMax(q{},k{})".format(varmax_q, varmax_k)),
              (8, minVar, {"mdp":mdp, "k":varmin_q, "q":varmin_k}, "VarMin(q{},k{})".format(varmin_q, varmin_k)),
              (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
-             (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b}, "rBOSS(K{},B{})".format(boss_k, boss_b))]
+             (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b}, "rBOSS(K{},B{})".format(boss_k, boss_b)),
+             (11, infoImp, {"mdp":mdp, "alpha":infoimp_alpha, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoImp(q{},k{},alpha{})".format(infomax_q, infomax_k, infoimp_alpha))]
 
-algos_to_include = [1, 2, 9, 10]
+algos_to_include = [1, 2, 9, 10, 11]
 
 algo_list = [elm[1] for elm in algos if elm[0] in algos_to_include]
 algo_params = [elm[2] for elm in algos if elm[0] in algos_to_include]
