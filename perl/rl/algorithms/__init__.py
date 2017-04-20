@@ -10,3 +10,4 @@ from .rBOSS import rBOSS
 from .infomax import InfoMaxSampling
 from .BAMCP import BAMCP
 from .infoimprov import InfoImprovSampling
+from .MCfgreedy import MCfGreedySampling

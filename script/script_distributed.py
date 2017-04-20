@@ -17,7 +17,7 @@ from perl.mdp.stockprecomp import StockPreComp
 
 from perl.rl.algorithms import Qlearning, PosteriorSampling, TwoStepPosteriorSampling
 from perl.rl.algorithms import TwoStepDecoupledPosteriorSampling, MaxVarPosteriorSampling, MinVarPosteriorSampling
-from perl.rl.algorithms import BOSS, Rmax, rBOSS, InfoMaxSampling, InfoImprovSampling
+from perl.rl.algorithms import BOSS, Rmax, rBOSS, InfoMaxSampling, InfoImprovSampling, MCfGreedySampling
 from perl.rl.simulator import reward_path, comparison_sim
 
 from perl.priors import BetaPrior
@@ -61,7 +61,7 @@ elif mdp_number == 5:
                                                                                      ymin, ymax, p_random, p_die)
     binary_reward = 0
 elif mdp_number == 6:
-    max_depth = 5 ; means=[0.5, 1, 1.25, 1.5, 1.75, 2, 3] ; sigma2=1
+    max_depth = 5 ; means=[0.5, 1, 1.25, 1.5, 1.75, 2, 3] ; sigma2=[1]
     mdp = NormalTriangle(max_depth, means, sigma2)
     mdp_name = "Normal-Triangle-{}-means-{}".format(max_depth, means)
     binary_reward = 0
@@ -97,7 +97,7 @@ else:
 QL = Qlearning ; PS = PosteriorSampling ; sTSPS = TwoStepPosteriorSampling
 rTSPS = TwoStepDecoupledPosteriorSampling ; BS = BOSS ;
 rmax = Rmax ; maxVar = MaxVarPosteriorSampling ; minVar = MinVarPosteriorSampling ; rBS = rBOSS
-infoMax = InfoMaxSampling
+infoMax = InfoMaxSampling ; infoImp = InfoImprovSampling ; MCfgreedy = MCfGreedySampling
 
 rmax_v = 12
 rmax_k = 4
@@ -114,6 +114,16 @@ infomax_episdata = 5
 infomax_total_budget = num_episodes # do PS with prob
 infoimp_alpha = 1
 
+# MCfGreedy Functions
+f1 = lambda vals: np.mean(vals) ; f1_name = "mean"
+f2 = lambda vals: np.mean(vals) + np.std(vals) ; f2_name = "1std"
+f3 = lambda vals: np.mean(vals) + 2 * np.std(vals) ; f3_name = "2std"
+f4 = lambda vals: np.mean(vals) + 3 * np.std(vals) ; f4_name = "3std"
+f5 = lambda vals: np.max(vals) ; f5_name = "max"
+f6 = lambda vals: np.max(vals) ; f6_name = "min"
+f7 = lambda vals: np.var(vals) ; f7_name = "var"
+f8 = lambda vals: -np.var(vals) ; f8_name = "-var"
+
 if binary_reward:
     algos = [(1, QL, {"mdp":mdp}, "QLearning"),
              (2, PS, {"mdp":mdp, "p_reward":lambda: BetaPrior(1, 1)}, "PosteriorSampling"),
@@ -125,7 +135,16 @@ if binary_reward:
              (8, minVar, {"mdp":mdp, "k":varmin_q, "q":varmin_k, "p_reward":lambda: BetaPrior(1, 1)}, "VarMin(q{},k{})".format(varmin_q, varmin_k)),
              (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
              (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b, "p_reward":lambda: BetaPrior(1, 1)}, "rBOSS(K{},B{})".format(boss_k, boss_b)),
-             (11, infoImp, {"mdp":mdp, "alpha":infoimp_alpha, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoImp(q{},k{},alpha{})".format(infomax_q, infomax_k, infoimp_alpha))]
+             (11, infoImp, {"mdp":mdp, "alpha":infoimp_alpha, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoImp(q{},k{},alpha{})".format(infomax_q, infomax_k, infoimp_alpha)),
+             (12, MCfgreedy, {"mdp":mdp, "f":f1, "f_name":f1_name, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f1_name)),
+             (13, MCfgreedy, {"mdp":mdp, "f":f2, "f_name":f2_name, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f2_name)),
+             (14, MCfgreedy, {"mdp":mdp, "f":f3, "f_name":f3_name, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f3_name)),
+             (15, MCfgreedy, {"mdp":mdp, "f":f4, "f_name":f4_name, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f4_name)),
+             (16, MCfgreedy, {"mdp":mdp, "f":f5, "f_name":f5_name, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f5_name)),
+             (17, MCfgreedy, {"mdp":mdp, "f":f6, "f_name":f6_name, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f6_name)),
+             (18, MCfgreedy, {"mdp":mdp, "f":f7, "f_name":f7_name, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f7_name)),
+             (19, MCfgreedy, {"mdp":mdp, "f":f8, "f_name":f8_name, "k":infomax_k, "q":infomax_q, "p_reward":lambda: BetaPrior(1, 1), "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f8_name))]
+
 else:
     algos = [(1, QL, {"mdp":mdp}, "QLearning"),
              (2, PS, {"mdp":mdp}, "PosteriorSampling"),
@@ -137,9 +156,17 @@ else:
              (8, minVar, {"mdp":mdp, "k":varmin_q, "q":varmin_k}, "VarMin(q{},k{})".format(varmin_q, varmin_k)),
              (9, infoMax, {"mdp":mdp, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoMax(q{},k{})".format(infomax_q, infomax_k)),
              (10, rBS, {"mdp":mdp, "K":boss_k, "B":boss_b}, "rBOSS(K{},B{})".format(boss_k, boss_b)),
-             (11, infoImp, {"mdp":mdp, "alpha":infoimp_alpha, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoImp(q{},k{},alpha{})".format(infomax_q, infomax_k, infoimp_alpha))]
+             (11, infoImp, {"mdp":mdp, "alpha":infoimp_alpha, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "InfoImp(q{},k{},alpha{})".format(infomax_q, infomax_k, infoimp_alpha)),
+             (12, MCfgreedy, {"mdp":mdp, "f":f1, "f_name":f1_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f1_name)),
+             (13, MCfgreedy, {"mdp":mdp, "f":f2, "f_name":f2_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f2_name)),
+             (14, MCfgreedy, {"mdp":mdp, "f":f3, "f_name":f3_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f3_name)),
+             (15, MCfgreedy, {"mdp":mdp, "f":f4, "f_name":f4_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f4_name)),
+             (16, MCfgreedy, {"mdp":mdp, "f":f5, "f_name":f5_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f5_name)),
+             (17, MCfgreedy, {"mdp":mdp, "f":f6, "f_name":f6_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f6_name)),
+             (18, MCfgreedy, {"mdp":mdp, "f":f7, "f_name":f7_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f7_name)),
+             (19, MCfgreedy, {"mdp":mdp, "f":f8, "f_name":f8_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f8_name))]
 
-algos_to_include = [1, 2, 9, 10, 11]
+algos_to_include = [1, 2, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 
 algo_list = [elm[1] for elm in algos if elm[0] in algos_to_include]
 algo_params = [elm[2] for elm in algos if elm[0] in algos_to_include]
