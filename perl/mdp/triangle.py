@@ -31,7 +31,7 @@ def Triangle(max_depth=5, probs=[0.1, 0.2, 0.3, 0.4, 0.5]):
         assert action in [-1, 1]
         return [(1, next_state_reward(state, action))]
 
-    return MDP(initial_states, actions, transitions, 1)
+    return MDP(initial_states, actions, transitions, 0.99)
 
 
 
