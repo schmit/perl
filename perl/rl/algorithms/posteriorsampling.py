@@ -58,6 +58,7 @@ def sample_posterior(posterior):
     """
     transitions = {(state, action): post.sample()
             for (state, action), post in posterior.transitions.items()}
+
     rewards = {(state, action): post.sample()
             for (state, action), post in posterior.rewards.items()}
     return transitions, rewards
@@ -90,6 +91,7 @@ def sample_mdp(env, posterior, discount=0.97):
     """
     Sample an MDP from the posterior
     """
+
     sampled_transitions, sampled_rewards = sample_posterior(posterior)
 
     def transitions(state, action):

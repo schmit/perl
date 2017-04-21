@@ -25,12 +25,12 @@ from collections import defaultdict
 
 from perl.rl.distributed import run_distributed_sim, save_obj
 
-num_cores = 45
+num_cores = 50
 
-mdp_number = 1 ; num_sims = num_cores * 4 ; num_episodes = 100 ; log_every = 4
+mdp_number = 0 ; num_sims = num_cores * 5 ; num_episodes = 132 ; log_every = 4
 
 if mdp_number == 0:
-    max_depth = 20 ; mdp = Triangle(max_depth, probs=[0.4 + 0.01*i for i in range(21)])
+    max_depth = 8 ; mdp = Triangle(max_depth, probs=[0.3 + 0.01*i for i in range(41)])
     mdp_name = "Triangle-{}".format(max_depth)
     binary_reward = 1
 elif mdp_number == 1:
@@ -166,7 +166,7 @@ else:
              (18, MCfgreedy, {"mdp":mdp, "f":f7, "f_name":f7_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f7_name)),
              (19, MCfgreedy, {"mdp":mdp, "f":f8, "f_name":f8_name, "k":infomax_k, "q":infomax_q, "num_epis_data":infomax_episdata, "total_budget":infomax_total_budget}, "MCf(q{},k{},f{})".format(infomax_q, infomax_k, f8_name))]
 
-algos_to_include = [1, 2, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+algos_to_include = [2, 9]
 
 algo_list = [elm[1] for elm in algos if elm[0] in algos_to_include]
 algo_params = [elm[2] for elm in algos if elm[0] in algos_to_include]
