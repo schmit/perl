@@ -61,7 +61,7 @@ def Blackjack(cards=["A", 2, 3, 4, 5, 6, 7, 8, 9, 10]):
             return [(1/ncards, (None, 1 if iswin(state, dealer_state) else -1))
                     for dealer_state in updated_states]
 
-    return MDP(initial_states, actions, transitions, 1)
+    return MDP(initial_states, actions, transitions, 0.99)
 
 
 
