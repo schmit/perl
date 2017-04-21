@@ -6,6 +6,8 @@ import numpy as np
 import math
 import random
 
+from .distributions import Bernoulli, Normal
+
 class NormalPrior:
     def __init__(self, mu0, sigma0, sigma):
         self.mu0 = mu0
@@ -20,6 +22,10 @@ class NormalPrior:
 
     def sample(self):
         return random.gauss(self.mu0, self.sigma0)
+
+    def sample_posterior(self):
+        mu = self.sample()
+        return Normal(mu, self.sigma)
 
     @property
     def map(self):
@@ -58,6 +64,10 @@ class BetaPrior(DirichletPrior):
 
     def sample(self):
         return np.random.dirichlet(self.params)[1]
+
+    def sample_posterior(self):
+        p = self.sample()
+        return Bernoulli(p)
 
     @property
     def map(self):
