@@ -59,7 +59,7 @@ def sample_posterior(posterior):
     transitions = {(state, action): post.sample()
             for (state, action), post in posterior.transitions.items()}
 
-    rewards = {(state, action): post.sample()
+    rewards = {(state, action): post.sample_posterior()
             for (state, action), post in posterior.rewards.items()}
     return transitions, rewards
 
